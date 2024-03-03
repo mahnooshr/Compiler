@@ -23,6 +23,8 @@ class Token:
      
 file1 = open("input.txt", "r") 
 
+str = file1.readline();
+
 file1.close() 
 
 
