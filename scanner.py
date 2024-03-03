@@ -19,8 +19,9 @@ class Token:
         recognize_token = str((self.type , self.value)) 
         return recognize_token
  
-def search_in_line (str):
+def search_in_line (line):
     current_loc=0
+    words=line.split(" ")
     
     
 
