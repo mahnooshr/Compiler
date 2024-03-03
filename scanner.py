@@ -7,6 +7,17 @@ Type_of_tokens = {
 "WHITESPACE"  : "\n\r\t\v\f"
 }
 
+def is_num(str):
+
+def is_id(str):
+
+def is_keyword(str):
+
+def is_symbol(str):
+
+
+
+
 l_num=1
 
 class Token:       
