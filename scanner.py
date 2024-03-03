@@ -22,8 +22,13 @@ class Token:
 search_in_line 
      
 file1 = open("input.txt", "r") 
-
-str = file1.readline();
+line_list = file1.readlines();
+for line in line_list:
+    str = line
+    ;
+    ;
+    ;
+    l_num = l_num + 1;
 
 file1.close() 
 
