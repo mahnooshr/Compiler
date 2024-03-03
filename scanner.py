@@ -19,7 +19,11 @@ class Token:
         recognize_token = str((self.type , self.value)) 
         return recognize_token
  
-search_in_line 
+def search_in_line (str):
+    current_loc=0
+    
+    
+
      
 file1 = open("input.txt", "r") 
 line_list = file1.readlines();
