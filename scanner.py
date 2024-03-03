@@ -20,7 +20,10 @@ def is_symbol(str):
 
 l_num=1
 
-class Token:       
+
+class Token:   
+    tokens=[]
+        
     def __init__(self , line_number, value , type):
         self.line_number = line_number
         self.value=value
@@ -31,12 +34,13 @@ class Token:
         return recognize_token
 
 
-def search_in_line (line):
-    current_loc=0
-    words=line.split(" ")
-    for word in words:
-        if is_keyword(word):
-            token.type=keyword
+    def search_in_line (line):
+        current_loc=0
+        words=line.split(" ")
+        for word in words:
+            if is_keyword(word):
+                
+                token.type=keyword
     
 
      
