@@ -29,11 +29,14 @@ class Token:
     def get_token(self):
         recognize_token = str((self.type , self.value)) 
         return recognize_token
- 
+
+
 def search_in_line (line):
     current_loc=0
     words=line.split(" ")
-    
+    for word in words:
+        if is_keyword(word):
+            token.type=keyword
     
 
      
