@@ -19,7 +19,7 @@ class Token:
         recognize_token = str((self.type , self.value)) 
         return recognize_token
  
- 
+search_in_line 
      
 file1 = open("input.txt", "r") 
 
@@ -29,7 +29,7 @@ file1.close()
 
 
 file2=open("tokens.txt", "w")
-
+file2.write(l_num +   )
 
 
 file2.close()
