@@ -34,16 +34,30 @@ class Line:
     def __Str__(self):
         return self.pointer_loc
         
-def lookahead_NUM (j,str):
+def lookahead_NUM (i,str):
     token_str=""
     line=Line(i,line)
-    for i in range(line.pointer_loc,len(str)):
-        if str[i] in Type_of_tokens["NUM"] :
-            token_str+=str[i]
+    while str[line.pointer_loc] in Type_of_tokens["ID"] :
+        if token_str 
+            token_str+=str[line.pointer_loc]
             line.pointer_loc+=1
-        else:
-            break
+    if str[line.pointer_loc] in Type_of_tokens["letter"]:
+        return #error
+    else:
+               
+        return Token(token_str,"NUM")
+
+
+def lookahead_IDKEYWORD (j,str):
+    token_str=""
+    line=Line(j,line)
+    while str[lin] in Type_of_tokens[""] :
+            token_str+=str[j]
+            line.pointer_loc+=1
+    if str[j+1]        
     return Token(token_str,"NUM")
+
+
   
 def get_next_token (i,line):
     n=len(line)
@@ -54,15 +68,11 @@ def get_next_token (i,line):
     if line[line.pointer_loc] in Type_of_tokens ["SYMBOL"]:
         Token(line[line.pointer_loc],"SYMBOL")
         
-    else:
-        token_str=""
-        while line[line.pointer_loc] in Type_of_tokens["NUM"]
-            token_str+=line[line.pointer_loc]
-            line.pointer_loc+=1
+    elif line[line.pointer_loc] in Type_of_tokens ["NUM"]:
             lookahead_NUM(l_num,line)
             
     elif line[line.pointer_loc]in Type_of_tokens["letter"] :
-        lookahead_NUM(line)    
+        lookahead_IDKEYWORD(l_num,line)    
   
             
     
