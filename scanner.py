@@ -48,8 +48,8 @@ def lookahead_NUM (i,line):
 def lookahead_IDKEYWORD (j,line):
     token_str=""
     # line=Line(j,str)
-    while str[line.pointer_loc] in Type_of_tokens["ID"] :
-            token_str+=str[line.pointer_loc]
+    while line.str[line.pointer_loc] in Type_of_tokens["ID"] :
+            token_str+=line.str[line.pointer_loc]
             line.pointer_loc+=1
     if token_str in Type_of_tokens["KEYWORD"]:
         return Token(token_str,"KEYWORD")
@@ -77,7 +77,7 @@ def get_next_token (i,line):
 
      
 file1 = open("input.txt", "r") 
-file2=open("tokens.txt", "w")
+file2 = open("tokens.txt", "w")
 line_list = file1.readlines();
 for line in line_list:
     get_next_token(line_list.index(line)+1,line)
