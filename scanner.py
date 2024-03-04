@@ -37,7 +37,7 @@ class Line:
 def lookahead_NUM (i,str):
     token_str=""
     line=Line(i,line)
-    while str[line.pointer_loc] in Type_of_tokens["ID"] :
+    while str[line.pointer_loc] in Type_of_tokens["NUM"] :
         token_str+=str[line.pointer_loc]
         line.pointer_loc+=1
     if str[line.pointer_loc] in Type_of_tokens["letter"]:
@@ -67,24 +67,27 @@ def get_next_token (i,line):
     line.pointer_loc=0
     
     if line[line.pointer_loc] in Type_of_tokens ["SYMBOL"]:
-        Token(line[line.pointer_loc],"SYMBOL")
-        
+        return Token(line[line.pointer_loc],"SYMBOL")
+    
     elif line[line.pointer_loc] in Type_of_tokens ["NUM"]:
-            lookahead_NUM(l_num,line)
+            return lookahead_NUM(l_num,line)
             
     elif line[line.pointer_loc]in Type_of_tokens["letter"] :
-        lookahead_IDKEYWORD(l_num,line)    
+        return lookahead_IDKEYWORD(l_num,line)    
   
             
     
 
      
-file1 = open("input.txt", "r") 
+with open('input.txt', 'r') as file:
+    line_list = file.readlines()
+    for line in line_list:
+        get_next_token(line_list.index(line),line)
+
 file2=open("tokens.txt", "w")
-line_list = file1.readlines();
-for line in line_list:
-    get_next_token(line_list.index(line),line)
+
 file2.write(tokens)
+
 file2.close()
 file1.close() 
 
