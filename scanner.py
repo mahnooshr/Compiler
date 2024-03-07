@@ -38,6 +38,7 @@ def lookahead_NUM (i,line):
     while str[line.pointer_loc] in Type_of_tokens["ID"] :
         token_str+=str[line.pointer_loc]
         line.pointer_loc+=1
+    print(token_str)    
     if str[line.pointer_loc] in Type_of_tokens["letters"]:
         return #error
     else:
@@ -51,6 +52,7 @@ def lookahead_IDKEYWORD (j,line):
     while line.str[line.pointer_loc] in Type_of_tokens["ID"] :
             token_str+=line.str[line.pointer_loc]
             line.pointer_loc+=1
+    print(token_str)        
     if token_str in Type_of_tokens["KEYWORD"]:
         return Token(token_str,"KEYWORD")
     else:       
@@ -63,23 +65,23 @@ def get_next_token (i,line):
     l_num=i
     line=Line(i,line)
     line.pointer_loc=0
-    
-    if line[line.pointer_loc] in Type_of_tokens ["SYMBOL"]:
-        Token(line[line.pointer_loc],"SYMBOL")
+    while line.pointer_loc<n:
+        if line.str[line.pointer_loc] in Type_of_tokens ["SYMBOL"]:
+            Token(line.str[line.pointer_loc],"SYMBOL")
         
-    elif line[line.pointer_loc] in Type_of_tokens ["NUM"]:
-            lookahead_NUM(l_num,line)
+        elif line.str[line.pointer_loc] in Type_of_tokens ["NUM"]:
+                lookahead_NUM(l_num,line)
             
-    elif line[line.pointer_loc]in Type_of_tokens["letter"] :
-        lookahead_IDKEYWORD(l_num,line)    
-  
+        elif line.str[line.pointer_loc]in Type_of_tokens["letters"] :
+            lookahead_IDKEYWORD(l_num,line)    
+    print("token_str") 
             
     
 
      
 file1 = open("input.txt", "r") 
 file2 = open("tokens.txt", "w")
-line_list = file1.readlines();
+line_list = file1.readlines()
 for line in line_list:
     get_next_token(line_list.index(line),line)
 file2.write(tokens)
