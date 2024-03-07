@@ -1,106 +1,77 @@
 Type_of_tokens = {
-"NUM" : "0123456789",
-"ID" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-"letters" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-"KEYWORD": ["if", "else", "void", "int", "for", "break", "return", "endif"],
-"SYMBOL" : [";", ":" ,"," ,"[", "]", "(", ")", "{", "}", "+", "-", "*", "=", "<", "=="],
-"COMMENT " :"///*",
-"WHITESPACE"  : "\n\r\t\v\f"
+    "NUM": "0123456789",
+    "ID": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+    "letters": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "KEYWORD": ["if", "else", "void", "int", "for", "break", "return", "endif"],
+    "SYMBOL": [";", ":", ",", "[", "]", "(", ")", "{", "}", "+", "-", "*", "=", "<", "=="],
+    "COMMENT": "///",
+    "WHITESPACE": "\n\r\t\v\f"
 }
 
-tokens=[]
+tokens = []
 
-class Token:   
-    
-        
-    def __init__(self , value , type):
-        self.value=value
-        self.type=type
+class Token:
+    def __init__(self, value, type):
+        self.value = value
+        self.type = type
         tokens.append(self)
-        
-    def __str__ (self):
+
+    def __str__(self):
         return f"({self.type}, {self.value})"
-    
 
-    
-    
 class Line:
-    
-    def __init__(self,number,str):    
-        self.line_number=number
-        self.pointer_loc=0
-        self.str=str
+    def __init__(self, number, line):
+        self.line_number = number
+        self.pointer_loc = 0
+        self.line = line
 
+    def lookahead_NUM(self):
+        token_str = ""
+        while self.pointer_loc < len(self.line) and self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
+            token_str += self.line[self.pointer_loc]
+            self.pointer_loc += 1
+        return Token(token_str, "NUM")
 
-def lookahead_NUM (i,line):
-    token_str=""
-    line=Line(i,line)
-    while str[line.pointer_loc] in Type_of_tokens["ID"] :
-        token_str+=str[line.pointer_loc]
-        line.pointer_loc+=1
-    print(token_str)    
-    if str[line.pointer_loc] in Type_of_tokens["letters"]:
-        return #error
-    else:
-               
-        return Token(token_str,"NUM")
+    def lookahead_IDKEYWORD(self):
+        token_str = ""
+        while self.pointer_loc < len(self.line) and self.line[self.pointer_loc] in Type_of_tokens["ID"]:
+            token_str += self.line[self.pointer_loc]
+            self.pointer_loc += 1
+        if token_str in Type_of_tokens["KEYWORD"]:
+            return Token(token_str, "KEYWORD")
+        else:
+            return Token(token_str, "ID")
 
+    def get_next_token(self):
+        while self.pointer_loc < len(self.line):
+            if self.line[self.pointer_loc] in Type_of_tokens["SYMBOL"]:
+                token = Token(self.line[self.pointer_loc], "SYMBOL")
+                self.pointer_loc += 1
+                return token
+            elif self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
+                return self.lookahead_NUM()
+            elif self.line[self.pointer_loc] in Type_of_tokens["letters"]:
+                return self.lookahead_IDKEYWORD()
+            elif self.line[self.pointer_loc] in Type_of_tokens["WHITESPACE"]:
+                self.pointer_loc += 1
+            else:
+                self.pointer_loc += 1
+        return None
 
-def lookahead_IDKEYWORD (j,line):
-    token_str=""
-    # line=Line(j,str)
-    while line.str[line.pointer_loc] in Type_of_tokens["ID"] :
-            token_str+=line.str[line.pointer_loc]
-            line.pointer_loc+=1
-    print(token_str)        
-    if token_str in Type_of_tokens["KEYWORD"]:
-        return Token(token_str,"KEYWORD")
-    else:       
-        return Token(token_str,"ID")
+def tokenize_file(filename):
+    tokens.clear()
+    with open(filename, "r") as file1:
+        for i, line in enumerate(file1):
+            line = line.strip()
+            if line:
+                line_obj = Line(i + 1, line)
+                while True:
+                    token = line_obj.get_next_token()
+                    if token is None:
+                        break
 
+    with open("tokens.txt", "w") as file2:
+        for token in tokens:
+            file2.write(str(token) + "\n")
 
-  
-def get_next_token (i,line):
-    n=len(line)
-    l_num=i
-    line=Line(i,line)
-    line.pointer_loc=0
-    while line.pointer_loc<n:
-        if line.str[line.pointer_loc] in Type_of_tokens ["SYMBOL"]:
-            Token(line.str[line.pointer_loc],"SYMBOL")
-        
-        elif line.str[line.pointer_loc] in Type_of_tokens ["NUM"]:
-                lookahead_NUM(l_num,line)
-            
-        elif line.str[line.pointer_loc]in Type_of_tokens["letters"] :
-            lookahead_IDKEYWORD(l_num,line)    
-    print("token_str") 
-            
-    
-
-     
-file1 = open("input.txt", "r") 
-file2 = open("tokens.txt", "w")
-line_list = file1.readlines()
-for line in line_list:
-    get_next_token(line_list.index(line),line)
-file2.write(tokens)
-
-file2.close()
-file1.close() 
-
-    
-     
-     
-     
-     
-     
-     
-     
-     
-     
-    
-    
-    
-        
-        
+tokenize_file("input.txt")
