@@ -69,9 +69,11 @@ def tokenize_file(filename):
                     token = line_obj.get_next_token()
                     if token is None:
                         break
-
-    with open("tokens.txt", "w") as file2:
-        for token in tokens:
-            file2.write(str(token) + "\n")
+                with open("tokens.txt", "a") as file2:
+                    file2.write(str(i+1) + "  ")
+                    for token in tokens:
+                        file2.write(str(token) + " ")
+                    tokens.clear()
+                    file2.write("\n")
 
 tokenize_file("input.txt")
