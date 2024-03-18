@@ -7,7 +7,7 @@ Type_of_tokens = {
     "COMMENT": "///",
     "WHITESPACE": "\n\r\t\v\f"
 }
-
+symbols = Type_of_tokens["KEYWORD"]
 tokens = []
 
 class Token:
@@ -40,6 +40,8 @@ class Line:
         if token_str in Type_of_tokens["KEYWORD"]:
             return Token(token_str, "KEYWORD")
         else:
+            if token_str not in symbols:
+                symbols.append(token_str)
             return Token(token_str, "ID")
 
     def get_next_token(self):
@@ -70,6 +72,8 @@ def tokenize_file(filename):
                     if token is None:
                         break
                 with open("tokens.txt", "a") as file2:
+                    if i == 0:
+                        file2.truncate(0)
                     file2.write(str(i+1) + "  ")
                     for token in tokens:
                         file2.write(str(token) + " ")
@@ -77,3 +81,7 @@ def tokenize_file(filename):
                     file2.write("\n")
 
 tokenize_file("input.txt")
+
+with open("symbol_table.txt", "w") as symbol_table:
+    for i, symbol in enumerate(symbols):
+        symbol_table.write(str(i+1) + " " + symbol + "\n")
