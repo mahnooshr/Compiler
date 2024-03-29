@@ -4,7 +4,7 @@ Type_of_tokens = {
     "letters": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
     "KEYWORD": ["if", "else", "void", "int", "for", "break", "return", "endif"],
     "SYMBOL": [";", ":", ",", "[", "]", "(", ")", "{", "}", "+", "-", "*", "=", "<", "=="],
-    "COMMENT": "///",
+    "COMMENT": "/*",
     "WHITESPACE": "\n\r\t\v\f"
 }
 symbols = Type_of_tokens["KEYWORD"]
@@ -24,7 +24,31 @@ class Line:
         self.line_number = number
         self.pointer_loc = 0
         self.line = line
-
+        
+        
+        
+    def lookahead_Sym(self):
+        token_str = ""
+        if str(self.line[self.pointer_loc+1])=="=":
+         if str(self.line[self.pointer_loc+1])=="=":
+                self.pointer_loc += 2
+                token_str="=="
+        else:
+                token_str = self.line[self.pointer_loc]  
+         
+        return Token(token_str, "SYMBOL")
+    
+    
+    def lookahead_comment(self):
+        token_str = ""
+        rest= self.line[self.pointer_loc+1:]
+        end=rest.find("*/") 
+        if end!=-1:
+            token_str=rest[0:end-1]
+            self.pointer_loc+=len(token_str)  
+        
+    
+    
     def lookahead_NUM(self):
         token_str = ""
         while self.pointer_loc < len(self.line) and self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
@@ -47,15 +71,14 @@ class Line:
     def get_next_token(self):
         while self.pointer_loc < len(self.line):
             if self.line[self.pointer_loc] in Type_of_tokens["SYMBOL"]:
-                token = Token(self.line[self.pointer_loc], "SYMBOL")
-                self.pointer_loc += 1
-                return token
+                return self.lookahead_Sym()
             elif self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
                 return self.lookahead_NUM()
             elif self.line[self.pointer_loc] in Type_of_tokens["letters"]:
                 return self.lookahead_IDKEYWORD()
-            elif self.line[self.pointer_loc] in Type_of_tokens["WHITESPACE"]:
-                self.pointer_loc += 1
+            elif str(self.line[self.pointer_loc])=="/":
+                if str(self.line[self.pointer_loc+1])=="*":
+                    return self.lookahead_comment()
             else:
                 self.pointer_loc += 1
         return None
@@ -82,6 +105,11 @@ def tokenize_file(filename):
 
 tokenize_file("input.txt")
 
+with open("symbol_table.txt", "w") as symbol_table:
+    for i, symbol in enumerate(symbols):
+        symbol_table.write(str(i+1) + " " + symbol + "\n")
+        
+        
 with open("symbol_table.txt", "w") as symbol_table:
     for i, symbol in enumerate(symbols):
         symbol_table.write(str(i+1) + " " + symbol + "\n")
