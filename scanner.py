@@ -29,12 +29,18 @@ class Line:
         
     def lookahead_Sym(self):
         token_str = ""
-        if str(self.line[self.pointer_loc+1])=="=":
-         if str(self.line[self.pointer_loc+1])=="=":
+        if (str(self.line[self.pointer_loc])=="=")and(str(self.line[self.pointer_loc+1])=="="):
+            # if str(self.line[self.pointer_loc+1])=="=":
                 self.pointer_loc += 2
                 token_str="=="
+            # else:
+            #     token_str = self.line[self.pointer_loc]
+            #     self.pointer_loc += 1;
+            #
+            #
         else:
-                token_str = self.line[self.pointer_loc]  
+                token_str = self.line[self.pointer_loc]
+                self.pointer_loc += 1;
          
         return Token(token_str, "SYMBOL")
     
