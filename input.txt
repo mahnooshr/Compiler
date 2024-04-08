@@ -1,6 +1,9 @@
 void main (void) {
     int a = 0;
-    /* comment1*/
+    /* comment1
+    fjsdklfjklaj
+    dslkfjaklfjdkl
+    fksjkl  */
     a = 2 + 2;
     a = a - 3;
     cde = a;

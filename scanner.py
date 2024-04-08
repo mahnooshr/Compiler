@@ -1,3 +1,8 @@
+# Compiler project phase 1
+# Mahdi Mohammadi 400105239
+# Mahnoosh Ramtin 99101592
+
+
 Type_of_tokens = {
     "NUM": "0123456789",
     "ID": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
@@ -105,7 +110,7 @@ def tokenize_file(filename):
                     if i == 0:
                         file2.truncate(0)
                     if(len(tokens)!=0):
-                        file2.write(str(i+1) + "  ")
+                        file2.write(str(i+1) + ".\t")
                     for token in tokens:
                         file2.write(str(token) + " ")
                     if (len(tokens) != 0):
@@ -121,4 +126,4 @@ with open("symbol_table.txt", "w") as symbol_table:
         
 with open("symbol_table.txt", "w") as symbol_table:
     for i, symbol in enumerate(symbols):
-        symbol_table.write(str(i+1) + " " + symbol + "\n")
+        symbol_table.write(str(i+1) + ".\t" + symbol + "\n")
