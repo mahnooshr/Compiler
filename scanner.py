@@ -50,8 +50,9 @@ class Line:
         rest= self.line[self.pointer_loc+1:]
         end=rest.find("*/") 
         if end!=-1:
-            token_str=rest[0:end-1]
-            self.pointer_loc+=len(token_str)  
+            token_str=rest[0:end+1]
+            self.pointer_loc+=len(token_str)+2
+            return token_str
         
     
     
@@ -103,11 +104,13 @@ def tokenize_file(filename):
                 with open("tokens.txt", "a") as file2:
                     if i == 0:
                         file2.truncate(0)
-                    file2.write(str(i+1) + "  ")
+                    if(len(tokens)!=0):
+                        file2.write(str(i+1) + "  ")
                     for token in tokens:
                         file2.write(str(token) + " ")
-                    tokens.clear()
-                    file2.write("\n")
+                    if (len(tokens) != 0):
+                        tokens.clear()
+                        file2.write("\n")
 
 tokenize_file("input.txt")
 
