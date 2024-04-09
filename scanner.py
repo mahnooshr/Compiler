@@ -14,7 +14,8 @@ Type_of_tokens = {
 }
 symbols = Type_of_tokens["KEYWORD"]
 tokens = []
-
+text = []
+txt = ""
 class Token:
     def __init__(self, value, type):
         self.value = value
@@ -52,12 +53,24 @@ class Line:
     
     def lookahead_comment(self):
         token_str = ""
-        rest= self.line[self.pointer_loc+1:]
-        end=rest.find("*/") 
+        rst = text.copy()
+        i = 1;
+        while(i<self.line_number):
+            rst.pop(0)
+            i=i+1
+        rest = ''.join(rst)
+        rest = rest.strip()
+        # rest = rest + '\n'
+        rest= rest[self.pointer_loc+1:]
+        end=rest.find("*/")
         if end!=-1:
             token_str=rest[0:end+1]
-            self.pointer_loc+=len(token_str)+2
-            return token_str
+            num_of_lines = token_str.count('\n')
+            if(num_of_lines == 0):
+                self.pointer_loc+=len(token_str)+2
+            return num_of_lines
+        else:
+            print("ERROR")
         
     
     
@@ -96,16 +109,26 @@ class Line:
         return None
 
 def tokenize_file(filename):
+    global txt
     tokens.clear()
     with open(filename, "r") as file1:
+        for j, ln in enumerate(file1):
+            text.append(ln)
+    with open(filename, "r") as file1:
+        token = ""
         for i, line in enumerate(file1):
+            if (isinstance(token, int) and token != 0):
+                token = token - 1
+                continue
             line = line.strip()
             if line:
                 line_obj = Line(i + 1, line)
                 while True:
                     token = line_obj.get_next_token()
-                    if token is None:
+                    if token is None or (isinstance(token, int) and token !=0):
                         break
+                if(isinstance(token, int)and token!=0):
+                    continue
                 with open("tokens.txt", "a") as file2:
                     if i == 0:
                         file2.truncate(0)
@@ -119,11 +142,6 @@ def tokenize_file(filename):
 
 tokenize_file("input.txt")
 
-with open("symbol_table.txt", "w") as symbol_table:
-    for i, symbol in enumerate(symbols):
-        symbol_table.write(str(i+1) + " " + symbol + "\n")
-        
-        
 with open("symbol_table.txt", "w") as symbol_table:
     for i, symbol in enumerate(symbols):
         symbol_table.write(str(i+1) + ".\t" + symbol + "\n")
