@@ -16,6 +16,7 @@ symbols = Type_of_tokens["KEYWORD"].copy()
 tokens = []
 text = []
 txt = ""
+errors=[]
 class Token:
     def __init__(self, value, type):
         self.value = value
@@ -30,7 +31,7 @@ class Line:
         self.line_number = number
         self.pointer_loc = 0
         self.line = line
-        
+        self.errors=errors
         
         
     def lookahead_Sym(self):
@@ -54,7 +55,7 @@ class Line:
     def lookahead_comment(self):
         token_str = ""
         rst = text.copy()
-        i = 1;
+        i = 1
         while(i<self.line_number):
             rst.pop(0)
             i=i+1
@@ -105,6 +106,8 @@ class Line:
                 if str(self.line[self.pointer_loc+1])=="*":
                     return self.lookahead_comment()
             else:
+                
+                self.errors.append(f"({self.line[self.pointer_loc]}, {"Invalid input"})")
                 self.pointer_loc += 1
         return None
 
@@ -145,3 +148,8 @@ tokenize_file("input.txt")
 with open("symbol_table.txt", "w") as symbol_table:
     for i, symbol in enumerate(symbols):
         symbol_table.write(str(i+1) + ".\t" + symbol + "\n")
+        
+with open("lexical_errors.txt", "w") as lexical_errors:
+    for i, symbol in enumerate(symbols):
+        symbol_table.write(str(i+1) + ".\t" + symbol + "\n")
+
