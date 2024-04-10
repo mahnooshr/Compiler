@@ -12,7 +12,7 @@ Type_of_tokens = {
     "COMMENT": "/*",
     "WHITESPACE": "\n\r\t\v\f"
 }
-symbols = Type_of_tokens["KEYWORD"]
+symbols = Type_of_tokens["KEYWORD"].copy()
 tokens = []
 text = []
 txt = ""
