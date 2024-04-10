@@ -82,7 +82,7 @@ class Line:
             self.pointer_loc += 1
             if self.line[self.pointer_loc] in Type_of_tokens["ID"]:
                 token_str += self.line[self.pointer_loc]
-                self.errors.append(f"({token_str}, {"Invalid number"})")
+                self.errors.append(f"({token_str}, {'Invalid number'})")
             else:
                 return Token(token_str, "NUM")
 
@@ -115,7 +115,7 @@ class Line:
                     return self.lookahead_Sym()
             else:
                 
-                self.errors.append(f"({self.line[self.pointer_loc]}, {"Invalid input"})")
+                self.errors.append(f"({self.line[self.pointer_loc]}, {'Invalid input'})")
                 self.pointer_loc += 1
             return None
 
@@ -181,4 +181,4 @@ with open("lexical_errors.txt", "r") as file3:
         
 with open("lexical_errors.txt", "w") as file3:
     if empty==True:
-        file3.write("'There is no lexical error.")
+        file3.write("There is no lexical error.")
