@@ -150,14 +150,35 @@ def tokenize_file(filename):
                     if (len(tokens) != 0):
                         tokens.clear()
                         file2.write("\n")
-
+                with open("lexical_errors.txt", "w") as file3:
+                    if i == 0:
+                        file3.truncate(0)
+                    if(len(errors)!=0):
+                        file3.write(str(i+1) + ".\t")
+                    for error in errors:
+                        file3.write(str(error) + " ")
+                    if (len(errors) != 0):
+                        errors.clear()
+                        file3.write("\n")
+                        
+                    
+                    
+                    
 tokenize_file("input.txt")
 
 with open("symbol_table.txt", "w") as symbol_table:
     for i, symbol in enumerate(symbols):
         symbol_table.write(str(i+1) + ".\t" + symbol + "\n")
         
-with open("lexical_errors.txt", "w") as lexical_errors:
-    for i, symbol in enumerate(symbols):
-        symbol_table.write(str(i+1) + ".\t" + symbol + "\n")
 
+with open("lexical_errors.txt", "r") as file3:
+    first_char = file3.read(1)
+ 
+    if not first_char:
+        empty=True
+    else:
+        empty=False    
+        
+with open("lexical_errors.txt", "w") as file3:
+    if empty==True:
+        file3.write("'There is no lexical error.")
