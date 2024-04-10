@@ -71,7 +71,7 @@ class Line:
                 self.pointer_loc+=len(token_str)+2
             return num_of_lines
         else:
-            print("ERROR")
+            self.errors.append("Unclosed comment")
         
     
     
@@ -80,7 +80,11 @@ class Line:
         while self.pointer_loc < len(self.line) and self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
             token_str += self.line[self.pointer_loc]
             self.pointer_loc += 1
-        return Token(token_str, "NUM")
+            if self.line[self.pointer_loc] in Type_of_tokens["ID"]:
+                token_str += self.line[self.pointer_loc]
+                self.errors.append(f"({token_str}, {"Invalid number"})")
+            else:
+                return Token(token_str, "NUM")
 
     def lookahead_IDKEYWORD(self):
         token_str = ""
@@ -96,20 +100,24 @@ class Line:
 
     def get_next_token(self):
         while self.pointer_loc < len(self.line):
-            if self.line[self.pointer_loc] in Type_of_tokens["SYMBOL"]:
-                return self.lookahead_Sym()
-            elif self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
+            if self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
                 return self.lookahead_NUM()
             elif self.line[self.pointer_loc] in Type_of_tokens["letters"]:
                 return self.lookahead_IDKEYWORD()
             elif str(self.line[self.pointer_loc])=="/":
                 if str(self.line[self.pointer_loc+1])=="*":
                     return self.lookahead_comment()
+            elif str(self.line[self.pointer_loc])=="*":
+                if str(self.line[self.pointer_loc+1])=="/":
+                    self.errors.append("Unmatched comment")
+                    self.pointer_loc+=2
+            elif self.line[self.pointer_loc] in Type_of_tokens["SYMBOL"]:
+                    return self.lookahead_Sym()
             else:
                 
                 self.errors.append(f"({self.line[self.pointer_loc]}, {"Invalid input"})")
                 self.pointer_loc += 1
-        return None
+            return None
 
 def tokenize_file(filename):
     global txt
