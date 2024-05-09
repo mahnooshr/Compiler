@@ -1,32 +1,32 @@
 import scanner
 
-class parser:
+class Parser:
 
     def __init__(self):
-        self.lookeahead = scanner.get_next_token()
+        self.lookahead = scanner.get_next_token()
     def Match(self, token ):
-        if self.lookeahead == token:
-            self.lookeahead = scanner.get_next_token()
+        if self.lookahead == token:
+            self.lookahead = scanner.get_next_token()
         else:
             return False
 
     def Program(self):
-        if self.lookeahead in ['int','void','ID',';', 'NUM', '(',' {','}', 'break', 'if','for','return','+','-','$']:
+        if self.lookahead in ['int','void','ID',';', 'NUM', '(',' {','}', 'break', 'if','for','return','+','-','$']:
             self.Declaration_List()
         else:
             print("error")
 
     def Declaration_List(self):
-        if self.lookeahead in ['int', 'void']:
+        if self.lookahead in ['int', 'void']:
             self.Declaration()
             self.Declaration_List()
-        elif self.lookeahead in ['ID', ';', 'NUM', '(', ' {', '}', 'break', 'if', 'for', 'return', '+','-', '$']:
+        elif self.lookahead in ['ID', ';', 'NUM', '(', ' {', '}', 'break', 'if', 'for', 'return', '+','-', '$']:
             return
         else:
             print("error")
 
     def Declaration(self):
-        if self.lookeahead in ['int', 'void']:
+        if self.lookahead in ['int', 'void']:
             self.Declaration_initial()
             self.Declaration_prime()
         else:
@@ -34,23 +34,23 @@ class parser:
 
 
     def Declaration_initial(self):
-        if self.lookeahead in ['int', 'void']:
+        if self.lookahead in ['int', 'void']:
             self.Type_specifier()
             self.Math('ID')
         else:
             print("error")
 
     def Declaration_prime(self):
-        if self.lookeahead in ['(']:
+        if self.lookahead in ['(']:
             self.Fun_declaration_prime()
-        elif self.lookeahead in [';','[']:
+        elif self.lookahead in [';','[']:
             self.Var_declaration_prime()
         else:
             print("error")
     def Var_declaration_prime(self):
-        if self.lookeahead in [';']:
+        if self.lookahead in [';']:
             self.Match(';')
-        elif self.lookeahead in ['[']:
+        elif self.lookahead in ['[']:
             self.Match('[')
             self.Match('NUM')
             self.Match(']')
@@ -59,7 +59,7 @@ class parser:
             print("error")
 
     def Fun_declaration_prime(self):
-        if self.lookeahead in ['(']:
+        if self.lookahead in ['(']:
             self.Match('(')
             self.Params()
             self.Match(')')
@@ -68,49 +68,49 @@ class parser:
             print("error")
 
     def Type_specifier(self):
-        if self.lookeahead in ['int']:
+        if self.lookahead in ['int']:
             self.Match('int')
-        elif self.lookeahead in ['void']:
+        elif self.lookahead in ['void']:
             self.Match('void')
         else:
             print("error")
 
     def Params(self):
-        if self.lookeahead in ['int']:
+        if self.lookahead in ['int']:
             self.Match('int')
             self.Match('ID')
             self.Param_prime()
             self.Param_list()
-        elif self.lookeahead in ['void']:
+        elif self.lookahead in ['void']:
             self.Match('void')
         else:
             print("error")
 
     def Param_list(self):
-        if self.lookeahead in [',']:
+        if self.lookahead in [',']:
             self.Match(',')
             self.Param_Param_list()
-        elif self.lookeahead in [')']:
+        elif self.lookahead in [')']:
             return
         else:
             print("error")
 
     def Param(self):
-        if self.lookeahead in ['int', 'void']:
+        if self.lookahead in ['int', 'void']:
             self.Declaration_initial_Param_prime()
         else:
             print("error")
     def  Param_prime(self):
-        if self.lookeahead in ['[']:
+        if self.lookahead in ['[']:
             self.Match('[')
             self.Match(']')
-        elif self.lookeahead in [')',',']:
+        elif self.lookahead in [')',',']:
             return
         else:
             print("error")
 
     def Compound_stmt(self):
-        if self.lookeahead in ['{']:
+        if self.lookahead in ['{']:
             self.Match('{')
             self.Declaration_list()
             self.Statement_list()
@@ -119,42 +119,42 @@ class parser:
             print("error")
 
     def Statement_list(self):
-        if self.lookeahead in ['ID',',','(','{','break','if','for','return','+','-']:
+        if self.lookahead in ['ID',',','(','{','break','if','for','return','+','-']:
             self.Statement()
             self.Statement_list()
-        elif self.lookeahead in ['}']:
+        elif self.lookahead in ['}']:
             return
         else:
             print("error")
 
     def Statement(self):
-        if self.lookeahead in ['ID',';','NUM','(','break','+','-']:
+        if self.lookahead in ['ID',';','NUM','(','break','+','-']:
             self. Expression_stmt()
-        elif self.lookeahead in ['{']:
+        elif self.lookahead in ['{']:
             self.Compound_stmt()
-        elif self.lookeahead in ['if']:
+        elif self.lookahead in ['if']:
             self.Selection_stmt()
-        elif self.lookeahead in ['for']:
+        elif self.lookahead in ['for']:
             self. Iteration_stmt()
-        elif self.lookeahead in ['return']:
+        elif self.lookahead in ['return']:
             self. Return_stmt()
         else:
             print("error")
 
     def Expression_stmt(self):
-        if self.lookeahead in ['ID','NUM','(','+','-']:
+        if self.lookahead in ['ID','NUM','(','+','-']:
             self.Expression()
             self.Match(';')
-        elif self.lookeahead in ['break']:
+        elif self.lookahead in ['break']:
             self.Match('break')
             self.Match(';')
-        elif self.lookeahead in [';']:
+        elif self.lookahead in [';']:
             self.Match(';')
         else:
             print("error")
 
     def Selection_stmt(self):
-        if self.lookeahead in ['if']:
+        if self.lookahead in ['if']:
             self.Match('if')
             self.Match('(')
             self.Expression()
@@ -165,9 +165,9 @@ class parser:
             print("error")
 
     def Else_stmt(self):
-        if self.lookeahead in ['endif']:
+        if self.lookahead in ['endif']:
             self.Match('endif')
-        elif self.lookeahead in ['else']:
+        elif self.lookahead in ['else']:
             self.Match('else')
             self.Statement()
             self.Match('endif')
@@ -175,7 +175,7 @@ class parser:
             print("error")
 
     def Iteration_stmt(self):
-        if self.lookeahead in ['for']:
+        if self.lookahead in ['for']:
             self.Match('for')
             self.Match('(')
             self.Expression()
@@ -189,25 +189,25 @@ class parser:
             print("error")
 
     def Return_stmt(self):
-        if  self.lookeahead in ['return']:
+        if  self.lookahead in ['return']:
             self.Match('return')
             self.Return_stmt_prime()
 
         else:
             print('error')
     def Return_stmt_prime(self):
-        if self.lookeahead in [';']:
+        if self.lookahead in [';']:
             self.Match(';')
-        elif self.lookeahead in ['ID','NUM','(','+','-']:
+        elif self.lookahead in ['ID','NUM','(','+','-']:
             self.Expression()
             self.Match(';')
         else:
             print('error')
 
     def Expression(self):
-        if self.lookeahead in ['NUM','(','+','-']:
+        if self.lookahead in ['NUM','(','+','-']:
             self.Simple_expression_zegond()
-        elif self.lookeahead in ['ID']:
+        elif self.lookahead in ['ID']:
             self.Match('ID')
             self.Match('B')
 
@@ -215,24 +215,24 @@ class parser:
             print('error')
 
     def B(self):
-        if self.lookeahead in ['=']:
+        if self.lookahead in ['=']:
             self.Match('=')
             self.Expression()
-        elif self.lookeahead in ['[']:
+        elif self.lookahead in ['[']:
             self.Match['[']
             self.Expression()
             self.Match[']']
             self.H()
-        elif self.lookeahead in ['(','<','==','+','-','*',';',']',')',',']:
+        elif self.lookahead in ['(','<','==','+','-','*',';',']',')',',']:
             self.Simple_expression_prime()
         else:
             print('error')
 
     def H(self):
-        if self.lookeahead in ['=']:
+        if self.lookahead in ['=']:
             self.Match('=')
             self.Expression()
-        elif self.lookeahead in ['*',';',']',')',',','<','==','+','-']:
+        elif self.lookahead in ['*',';',']',')',',','<','==','+','-']:
             self.G()
             self.D()
             self.C()
@@ -240,43 +240,43 @@ class parser:
             print('error')
 
     def Simple_expression_zegond(self):
-        if self.lookeahead in ['NUM','(','+','-']:
+        if self.lookahead in ['NUM','(','+','-']:
             self.Additive_expression_prime()
             self.C()
         else:
             print('error')
     def Simple_expression_prime(self):
-        if self.lookeahead in [';', ']',')',',','<','==']:
+        if self.lookahead in [';', ']',')',',','<','==']:
             self.Additive_expression_prime()
             self.C()
         else:
             print('error')
     def C(self):
-        if self.lookeahead in ['<','==']:
+        if self.lookahead in ['<','==']:
             self.Relop()
             self.Additive_expression()
-        elif self.lookeahead in [';',']',')',',']:
+        elif self.lookahead in [';',']',')',',']:
             return
         else:
             print('error')
 
     def Relop(self):
-        if self.lookeahead in ['<']:
+        if self.lookahead in ['<']:
             self.Match('<')
-        elif self.lookeahead in ['==']:
+        elif self.lookahead in ['==']:
             self.Match('==')
         else:
             print('error')
 
     def Additive_expression(self):
-        if self.lookeahead in ['ID','NUM','(','+','-']:
+        if self.lookahead in ['ID','NUM','(','+','-']:
             self.Term()
             self.D()
         else:
             print('error')
 
     def Additive_expression_prime(self):
-        if self.lookeahead in ['(','*',';',']',')',',','<','==','+','-']:
+        if self.lookahead in ['(','*',';',']',')',',','<','==','+','-']:
             self.Term_prime()
             self.D()
 
@@ -284,46 +284,46 @@ class parser:
             print('error')
 
     def Aditive_expression_zegond(self):
-        if self.lookeahead in ['NUM','(','+','-']:
+        if self.lookahead in ['NUM','(','+','-']:
             self.Term_zegond()
             self.D()
         else:
             print('error')
 
     def D(self):
-        if self.lookeahead in ['+','-']:
+        if self.lookahead in ['+','-']:
             self.Addop()
             self.Term()
             self.D()
-        elif self.lookeahead in [';',']',')',',','<','==']:
+        elif self.lookahead in [';',']',')',',','<','==']:
             return
         else:
             print('error')
 
     def Addop(self):
-        if self.lookeahead in ['+']:
+        if self.lookahead in ['+']:
             self.Match('+')
-        elif self.lookeahead in ['-']:
+        elif self.lookahead in ['-']:
             self.Match('-')
         else:
             print('error')
 
     def Term(self):
-        if self.lookeahead in ['ID','NUM','(','+','-']:
+        if self.lookahead in ['ID','NUM','(','+','-']:
             self.Signed_factor()
             self.G()
         else:
             print('error')
 
     def Term_prime(self):
-        if self.lookeahead in ['(',';',']',')',',','<','==','+','-','*']:
+        if self.lookahead in ['(',';',']',')',',','<','==','+','-','*']:
             self.Signed_factor_prime()
             self.G()
         else:
             print('error')
 
     def Term_zegond(self):
-        if self.lookeahead in ['NUM','(','+','-']:
+        if self.lookahead in ['NUM','(','+','-']:
             self.Signed_factor_zegond()
             self.G()
         else:
@@ -331,108 +331,108 @@ class parser:
 
 
     def G(self):
-      if self.lookeahead in ['*']:
+      if self.lookahead in ['*']:
         self.Match('*')
         self.Signed_factor()
         self.G()
-      elif self.lookeahead in [';',']',')',',','<','==','+','-']:
+      elif self.lookahead in [';',']',')',',','<','==','+','-']:
         return
       else:
         print('error')
 
     def Signed_factor(self):
-        if self.lookeahead in ['+']:
+        if self.lookahead in ['+']:
             self.Match('+')
             self.Factor()
-        elif self.lookeahead in ['-']:
+        elif self.lookahead in ['-']:
             self.Match('-')
             self.Factor()
-        elif self.lookeahead in ['ID','NUM','(']:
+        elif self.lookahead in ['ID','NUM','(']:
             self.Factor()
         else:
             print('error')
 
     def Signed_factor_prime(self):
-        if self.lookeahead in ['(',';',']',')',',','<','==','+','-','*']:
+        if self.lookahead in ['(',';',']',')',',','<','==','+','-','*']:
             self.Factor_prime()
         else:
             print('error')
 
     def Signed_factor_zegond(self):
-        if self.lookeahead in ['+']:
+        if self.lookahead in ['+']:
             self.Match('+')
             self.Factor()
-        elif self.lookeahead in ['-']:
+        elif self.lookahead in ['-']:
             self.Match('-')
             self.Factor()
-        elif self.lookeahead in ['NUM','(']:
+        elif self.lookahead in ['NUM','(']:
             self.Factor_zegond()
         else:
             print('error')
 
     def Factor(self):
-        if self.lookeahead in ['(']:
+        if self.lookahead in ['(']:
             self.Match('(')
             self.Expression()
             self.Match(')')
-        elif self.lookeahead in ['ID']:
+        elif self.lookahead in ['ID']:
             self.Match('ID')
             self.Var_call_prime
-        elif self.lookeahead in ['NUM']:
+        elif self.lookahead in ['NUM']:
             self.Match('NUM')
         else:
             print('error')
 
     def Var_call_prime(self):
-        if self.lookeahead in ['(']:
+        if self.lookahead in ['(']:
             self.Match('(')
             self.Args()
             self.Match(')')
-        elif self.lookeahead in ['[',';',']',')',',','<','==','+','-','*']:
+        elif self.lookahead in ['[',';',']',')',',','<','==','+','-','*']:
             self.Var_prime()
         else:
             print('error')
 
     def Var_Prime(self):
-        if self.lookeahead in ['[']:
+        if self.lookahead in ['[']:
             self.Match('[')
             self.Expression()
             self.Match(']')
-        elif self.lookeahead in [';',']',')',',','<','==','+','-','*']:
+        elif self.lookahead in [';',']',')',',','<','==','+','-','*']:
             return
         else:
             print('error')
 
     def Factor_Prime(self):
-        if self.lookeahead in ['(']:
+        if self.lookahead in ['(']:
             self.Match('(')
             self.Args()
             self.Match(')')
-        elif self.lookeahead in [';',']',')',',','<','==','+','-','*']:
+        elif self.lookahead in [';',']',')',',','<','==','+','-','*']:
             return
         else:
             print('error')
 
     def Factor_zegond(self):
-        if self.lookeahead in ['(']:
+        if self.lookahead in ['(']:
             self.Match('(')
             self.Expression()
             self.Match(')')
-        elif self.lookeahead in ['NUM']:
+        elif self.lookahead in ['NUM']:
             self.Match('NUM')
         else:
             print('error')
 
     def Args(self):
-        if self.lookeahead in ['ID','NUM','(','+','-']:
+        if self.lookahead in ['ID','NUM','(','+','-']:
             self.Arg_list()
-        elif self.lookeahead in [')']:
+        elif self.lookahead in [')']:
             return
         else:
             print('error')
 
     def Arg_list(self):
-        if self.lookeahead in ['ID','NUM','(','+','-']:
+        if self.lookahead in ['ID','NUM','(','+','-']:
             self.Expression()
             self.Arg_list_prime()
 
@@ -440,18 +440,18 @@ class parser:
             print('error')
 
     def Arg_list_prime(self):
-        if self.lookeahead in [',']:
+        if self.lookahead in [',']:
             self.Match(',')
             self.Expression()
             self.Arg_list_prime()
-        elif self.lookeahead in [')']:
+        elif self.lookahead in [')']:
             return
         else:
             print('error')
 
 
 while True:
-    parser=parser()
+    parser=Parser()
     parser.Program()
 
 
