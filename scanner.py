@@ -17,7 +17,20 @@ tokens = []
 text = []
 txt = ""
 errors = []
+line_no = 0
+pointer_location = 0
+with open('input.txt', "r") as file1:
+    for j, ln in enumerate(file1):
+        text.append(ln)
 
+
+def read_file_into_list(file_path):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+        return [line.strip() for line in lines]
+
+
+file = read_file_into_list('input.txt')
 
 class Token:
     def __init__(self, value, type):
@@ -30,14 +43,14 @@ class Token:
 
 
 class Line:
-    def __init__(self, number, line):
+    def __init__(self, number, line, pointer_loc):
         self.line_number = number
-        self.pointer_loc = 0
+        self.pointer_loc = pointer_loc
         self.line = line
         self.errors = errors
 
     def lookahead_Sym(self):
-        token_str = ""
+        global pointer_location
         if (str(self.line[self.pointer_loc]) == "=") and (str(self.line[self.pointer_loc + 1]) == "="):
             # if str(self.line[self.pointer_loc+1])=="=":
             self.pointer_loc += 2
@@ -46,10 +59,11 @@ class Line:
             token_str = self.line[self.pointer_loc]
             self.pointer_loc += 1
 
+        pointer_location = self.pointer_loc
         return Token(token_str, "SYMBOL")
 
     def lookahead_comment(self):
-        token_str = ""
+        global pointer_location
 
         rst = text.copy()
 
@@ -67,6 +81,7 @@ class Line:
             num_of_lines = token_str.count('\n')
             if num_of_lines == 0:
                 self.pointer_loc += len(token_str) + 2
+            pointer_location = self.pointer_loc
             return num_of_lines
 
         else:
@@ -84,6 +99,7 @@ class Line:
             return -2
 
     def lookahead_NUM(self):
+        global pointer_location
         token_str = ""
         while self.pointer_loc < len(self.line) and self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
             token_str += self.line[self.pointer_loc]
@@ -92,7 +108,7 @@ class Line:
             if self.line[self.pointer_loc] in Type_of_tokens["SYMBOL"] or \
                     self.line[self.pointer_loc] in Type_of_tokens["COMMENT"] or \
                     self.line[self.pointer_loc] in Type_of_tokens["WHITESPACE"]:
-
+                pointer_location = self.pointer_loc
                 return Token(token_str, "NUM")
 
             elif self.line[self.pointer_loc] in Type_of_tokens["letters"]:
@@ -107,9 +123,11 @@ class Line:
                 errors.append(f"({token_str}, {'Invalid input'})")
                 self.pointer_loc += 1
         else:
+            pointer_location = self.pointer_loc
             return Token(token_str, "NUM")
 
     def lookahead_IDKEYWORD(self):
+        global pointer_location
         token_str = ""
         while self.pointer_loc < len(self.line) and self.line[self.pointer_loc] in Type_of_tokens["ID"]:
             token_str += self.line[self.pointer_loc]
@@ -120,11 +138,12 @@ class Line:
                     self.line[self.pointer_loc] in Type_of_tokens["WHITESPACE"]:
 
                 if token_str in Type_of_tokens["KEYWORD"]:
-
+                    pointer_location = self.pointer_loc
                     return Token(token_str, "KEYWORD")
                 else:
                     if token_str not in symbols:
                         symbols.append(token_str)
+                    pointer_location = self.pointer_loc
                     return Token(token_str, "ID")
             else:
 
@@ -136,94 +155,41 @@ class Line:
         else:
 
             if token_str in Type_of_tokens["KEYWORD"]:
-
+                pointer_location = self.pointer_loc
                 return Token(token_str, "KEYWORD")
             else:
                 if token_str not in symbols:
                     symbols.append(token_str)
 
+                pointer_location = self.pointer_loc
                 return Token(token_str, "ID")
 
-    def get_next_token(self):
-
-        while self.pointer_loc < len(self.line):
-            stri = ""
-            if (str(self.line[self.pointer_loc]) == "*") and (str(self.line[self.pointer_loc + 1]) == "/"):
+def get_next_token():
+    global line_no, pointer_location
+    while True:
+        if line_no == len(file):
+            return '$'
+        line_obj = Line(line_no + 1, file[line_no], pointer_location)
+        if line_obj.pointer_loc < len(line_obj.line):
+            if (str(line_obj.line[line_obj.pointer_loc]) == "*") and (str(line_obj.line[line_obj.pointer_loc + 1]) == "/"):
                     errors.append(f"({'*/'}, {'Unmatched comment'})")
-                    self.pointer_loc = self.pointer_loc + 2
-            elif self.line[self.pointer_loc] in Type_of_tokens["SYMBOL"]:
-                return self.lookahead_Sym()
-            elif self.line[self.pointer_loc] in Type_of_tokens["NUM"]:
-                return self.lookahead_NUM()
-            elif self.line[self.pointer_loc] in Type_of_tokens["letters"]:
-                return self.lookahead_IDKEYWORD()
-            elif str(self.line[self.pointer_loc]) == "/":
-                if str(self.line[self.pointer_loc + 1]) == "*":
-                    return self.lookahead_comment()
-            elif self.line[self.pointer_loc] in Type_of_tokens["WHITESPACE"]:
-                self.pointer_loc += 1
+                    line_obj.pointer_loc = line_obj.pointer_loc + 2
+            elif line_obj.line[line_obj.pointer_loc] in Type_of_tokens["SYMBOL"]:
+                return line_obj.lookahead_Sym()
+            elif line_obj.line[line_obj.pointer_loc] in Type_of_tokens["NUM"]:
+                return line_obj.lookahead_NUM()
+            elif line_obj.line[line_obj.pointer_loc] in Type_of_tokens["letters"]:
+                return line_obj.lookahead_IDKEYWORD()
+            elif str(line_obj.line[line_obj.pointer_loc]) == "/":
+                if str(line_obj.line[line_obj.pointer_loc + 1]) == "*":
+                    line_no = line_no + line_obj.lookahead_comment()
+            elif line_obj.line[line_obj.pointer_loc] in Type_of_tokens["WHITESPACE"]:
+                pointer_location += 1
 
             else:
-                stri = str(self.line[self.pointer_loc])
+                stri = str(line_obj.line[line_obj.pointer_loc])
                 errors.append(f"({stri}, {'Invalid input'})")
-                self.pointer_loc += 1
-        return None
-
-
-def tokenize_file(filename):
-    global txt
-    tokens.clear()
-    lexical_error_found = False  # Flag to track if any lexical error is found
-    with open(filename, "r") as file1:
-        for j, ln in enumerate(file1):
-            text.append(ln)
-    with open(filename, "r") as file1:
-        token = ""
-        for i, line in enumerate(file1):
-            if (isinstance(token, int) and token > 0):
-                token = token - 1
-                continue
-            line = line.strip()
-            if line:
-                line_obj = Line(i + 1, line)
-                while True:
-                    token = line_obj.get_next_token()
-                    if token == -1:
-                        continue
-                    if token == -2:
-                        break
-                    if token is None or (isinstance(token, int) and token > 0):
-                        break
-                with open("tokens.txt", "a") as file2:
-                    if i == 0:
-                        file2.truncate(0)
-                    if (len(tokens) != 0):
-                        file2.write(str(i + 1) + ".\t")
-                    for t in tokens:
-                        file2.write(str(t) + " ")
-                    if (len(tokens) != 0):
-                        tokens.clear()
-                        file2.write("\n")
-                with open("lexical_errors.txt", "a") as file3:
-                    if i == 0:
-                        file3.truncate(0)
-                    if (len(errors) != 0):
-                        file3.write(str(i + 1) + ".\t")
-                        lexical_error_found = True  # Set the flag if lexical error is found
-                    for error in errors:
-                        file3.write(str(error) + " ")
-                    if (len(errors) != 0):
-                        errors.clear()
-                        file3.write("\n")
-                if token == -2:
-                    break
-    if not lexical_error_found:
-        with open("lexical_errors.txt", "a") as file3:
-            file3.write("There is no lexical error.\n")
-
-
-tokenize_file("input.txt")
-
-with open("symbol_table.txt", "w") as symbol_table:
-    for i, symbol in enumerate(symbols):
-        symbol_table.write(str(i + 1) + ".\t" + symbol + "\n")
+                line_obj.pointer_loc += 1
+        else:
+            line_no = line_no + 1
+            pointer_location = 0
