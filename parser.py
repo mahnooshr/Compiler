@@ -450,7 +450,9 @@ class parser:
             print('error')
 
 
-
+while True:
+    parser=parser()
+    parser.Program()
 
 
 
