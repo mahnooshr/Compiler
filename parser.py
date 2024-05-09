@@ -4,6 +4,12 @@ class parser:
     def __init__(self, tokens):
         self.tokens = tokens
         self.lookeahead = None
+        self.type=type
+    def Match(self,type):
+        if self.lookeahead == type:
+            return True
+        else:
+            return False
 
     def Program(self):
         if self.lookeahead in ['int','void','ID',';', 'NUM', '(',' {','}', 'break', 'if','for','return','+','-','$']:
