@@ -1,13 +1,12 @@
-
+import scanner
 
 class parser:
-    def __init__(self, tokens):
-        self.tokens = tokens
-        self.lookeahead = None
-        self.type=type
-    def Match(self,type):
-        if self.lookeahead == type:
-            return True
+
+    def __init__(self):
+        self.lookeahead = scanner.get_next_token()
+    def Match(self, token ):
+        if self.lookeahead == token:
+            self.lookeahead = scanner.get_next_token()
         else:
             return False
 
