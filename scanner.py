@@ -36,6 +36,7 @@ class Token:
     def __init__(self, value, type):
         self.value = value
         self.type = type
+        self.term = value
         tokens.append(self)
 
     def __str__(self):
@@ -109,7 +110,9 @@ class Line:
                     self.line[self.pointer_loc] in Type_of_tokens["COMMENT"] or \
                     self.line[self.pointer_loc] in Type_of_tokens["WHITESPACE"]:
                 pointer_location = self.pointer_loc
-                return Token(token_str, "NUM")
+                temp = Token(token_str, "NUM")
+                temp.term = temp.type
+                return temp
 
             elif self.line[self.pointer_loc] in Type_of_tokens["letters"]:
                 token_str += self.line[self.pointer_loc]
@@ -124,7 +127,9 @@ class Line:
                 self.pointer_loc += 1
         else:
             pointer_location = self.pointer_loc
-            return Token(token_str, "NUM")
+            temp = Token(token_str, "NUM")
+            temp.term = temp.type
+            return temp
 
     def lookahead_IDKEYWORD(self):
         global pointer_location
@@ -144,7 +149,9 @@ class Line:
                     if token_str not in symbols:
                         symbols.append(token_str)
                     pointer_location = self.pointer_loc
-                    return Token(token_str, "ID")
+                    temp = Token(token_str, "ID")
+                    temp.term = temp.type
+                    return temp
             else:
 
                 token_str += self.line[self.pointer_loc]
@@ -162,13 +169,15 @@ class Line:
                     symbols.append(token_str)
 
                 pointer_location = self.pointer_loc
-                return Token(token_str, "ID")
+                temp = Token(token_str, "ID")
+                temp.term = temp.type
+                return temp
 
 def get_next_token():
     global line_no, pointer_location
     while True:
         if line_no == len(file):
-            return '$'
+            return Token('$', '$')
         line_obj = Line(line_no + 1, file[line_no], pointer_location)
         if line_obj.pointer_loc < len(line_obj.line):
             if (str(line_obj.line[line_obj.pointer_loc]) == "*") and (str(line_obj.line[line_obj.pointer_loc + 1]) == "/"):
