@@ -3,7 +3,18 @@ from anytree import RenderTree, Node
 
 tree = []
 
+error=[]
+first_sets = {
+        "Program": [";","[","(","int","void"],
+        "Declaration_list" : [";","[","(","int","void"],
+        "Declaration" : [";","[","(","int","void"],
+         "Declaration_initial": ["int","void"]
 
+    }
+
+follow_set ={
+    "Program": [";","[","(","int","void"],
+}
 class Parser:
 
     def __init__(self):
@@ -19,13 +30,16 @@ class Parser:
         else:
             return False
 
+
     def Program(self, num_of_item):
         if self.lookahead.term in ['int', 'void', 'ID', ';', 'NUM', '(', ' {', '}', 'break', 'if', 'for', 'return', '+',
                                    '-', '$']:
             tree.append(Node("Declaration-list", parent=tree[num_of_item]))
             self.Declaration_list(len(tree) - 1)
         else:
-            print("error")
+            error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+            self.lookahead = scanner.get_next_token()
+            self.Program()
 
     def Declaration_list(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
@@ -40,7 +54,9 @@ class Parser:
                 self.Match('$',0)
             return
         else:
-            print("error")
+            error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+            self.lookahead = scanner.get_next_token()
+            self.Declaration_list()
 
     def Declaration(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
@@ -50,7 +66,13 @@ class Parser:
             self.Declaration_initial(temp)
             self.Declaration_prime(temp + 1)
         else:
-            print("error")
+            if self.lookahead.term in ['ID',';','NUM','(','int','void','{','}','break','if','for','return','+', '-', '$']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Declaration()
 
     def Declaration_initial(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
@@ -58,7 +80,13 @@ class Parser:
             self.Type_specifier(len(tree) - 1)
             self.Match('ID', num_of_item)
         else:
-            print("error")
+            if self.lookahead.term in [';','[','(',')',',']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Declaration_initial()
 
     def Declaration_prime(self, num_of_item):
         if self.lookahead.term in ['(']:
@@ -68,8 +96,14 @@ class Parser:
             tree.append(Node("Var-declaration-prime", parent=tree[num_of_item]))
             self.Var_declaration_prime(len(tree) - 1)
         else:
-            print("error")
-
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
+                                       '+', '-', '$']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Declaration_prime()
     def Var_declaration_prime(self, num_of_item):
         if self.lookahead.term in [';']:
             self.Match(';', num_of_item)
@@ -79,7 +113,14 @@ class Parser:
             self.Match(']', num_of_item)
             self.Match(';', num_of_item)
         else:
-            print("error")
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
+                                       '+', '-', '$']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Var_declaration_prime()
 
     def Fun_declaration_prime(self, num_of_item):
         if self.lookahead.term in ['(']:
@@ -92,7 +133,14 @@ class Parser:
             tmp = len(tree) - 1
             self.Compound_stmt(tmp)
         else:
-            print("error")
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
+                                       '+', '-', '$']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Fun_declaration_prime()
 
     def Type_specifier(self, num_of_item):
         if self.lookahead.term in ['int']:
@@ -100,7 +148,13 @@ class Parser:
         elif self.lookahead.term in ['void']:
             self.Match('void', num_of_item)
         else:
-            print("error")
+            if self.lookahead.term in ['ID']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Type_specifier()
 
     def Params(self, num_of_item):
         if self.lookahead.term in ['int']:
@@ -114,7 +168,13 @@ class Parser:
         elif self.lookahead.term in ['void']:
             self.Match('void', num_of_item)
         else:
-            print("error")
+            if self.lookahead.term in [')']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Params()
 
     def Param_list(self, num_of_item):
         if self.lookahead.term in [',']:
@@ -128,7 +188,10 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print("error")
+
+            error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+            self.lookahead = scanner.get_next_token()
+            self.Param_list()
 
     def Param(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
@@ -138,7 +201,13 @@ class Parser:
             self.Declaration_initial(num_of_item)
             self.Param_prime(num_of_item)
         else:
-            print("error")
+            if self.lookahead.term in [')',',']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Param()
 
     def Param_prime(self, num_of_item):
         if self.lookahead.term in ['[']:
@@ -148,7 +217,9 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print("error")
+            error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+            self.lookahead = scanner.get_next_token()
+            self.Param_prime()
 
     def Compound_stmt(self, num_of_item):
         if self.lookahead.term in ['{']:
@@ -160,7 +231,14 @@ class Parser:
             self.Statement_list(temp + 1)
             self.Match('}', num_of_item)
         else:
-            print("error")
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for','endif','else', 'return',
+                                       '+', '-', '$']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Compound_stmt()
 
     def Statement_list(self, num_of_item):
         if self.lookahead.term in ['ID', ',', '(', '{', 'break', 'if', 'for', 'return', '+', '-']:
@@ -173,7 +251,10 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print("error")
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Statement_list()
 
     def Statement(self, num_of_item):
         if self.lookahead.term in ['ID', ';', 'NUM', '(', 'break', '+', '-']:
@@ -192,7 +273,15 @@ class Parser:
             tree.append(Node("Return-stmt", parent=tree[num_of_item]))
             self.Return_stmt(len(tree) - 1)
         else:
-            print("error")
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
+                                       'else', 'return',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Statement_list()
 
     def Expression_stmt(self, num_of_item):
         if self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
@@ -205,7 +294,15 @@ class Parser:
         elif self.lookahead.term in [';']:
             self.Match(';', num_of_item)
         else:
-            print("error")
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
+                                       'else', 'return',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Expression_stmt()
 
     def Selection_stmt(self, num_of_item):
         if self.lookahead.term in ['if']:
@@ -221,7 +318,15 @@ class Parser:
             self.Statement(temp)
             self.Else_stmt(temp+1)
         else:
-            print("error")
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
+                                       'else', 'return',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Selection_stmt()
 
     def Else_stmt(self, num_of_item):
         if self.lookahead.term in ['endif']:
@@ -232,7 +337,15 @@ class Parser:
             self.Statement(len(tree) - 1)
             self.Match('endif', num_of_item)
         else:
-            print("error")
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
+                                       'else', 'return',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Else_stmt()
 
     def Iteration_stmt(self, num_of_item):
         if self.lookahead.term in ['for']:
@@ -251,7 +364,15 @@ class Parser:
             self.Match(')', num_of_item)
             self.Statement(temp + 3)
         else:
-            print("error")
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
+                                       'else', 'return',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Iteration_stmt()
 
     def Return_stmt(self, num_of_item):
         if self.lookahead.term in ['return']:
@@ -259,7 +380,15 @@ class Parser:
             tree.append(Node("Return-stmt-prime", parent=tree[num_of_item]))
             self.Return_stmt_prime(len(tree) - 1)
         else:
-            print('error')
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
+                                       'else', 'return',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Return_stmt()
 
     def Return_stmt_prime(self, num_of_item):
         if self.lookahead.term in [';']:
@@ -269,7 +398,15 @@ class Parser:
             self.Expression(len(tree) - 1)
             self.Match(';', num_of_item)
         else:
-            print('error')
+            if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
+                                       'else', 'return',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Return_stmt_prime()
 
     def Expression(self, num_of_item):
         if self.lookahead.term in ['NUM', '(', '+', '-']:
@@ -281,7 +418,13 @@ class Parser:
             self.B(len(tree) -1)
 
         else:
-            print('error')
+            if self.lookahead.term in [';',']',')',',']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Expression()
 
     def B(self, num_of_item):
         if self.lookahead.term in ['=']:
@@ -301,7 +444,10 @@ class Parser:
             tree.append(Node("Simple-expression-prime", parent=tree[num_of_item]))
             self.Simple_expression_prime(len(tree) - 1)
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.B()
 
     def H(self, num_of_item):
         if self.lookahead.term in ['=']:
@@ -317,7 +463,10 @@ class Parser:
             self.D(temp + 1)
             self.C(temp + 2)
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.H()
 
     def Simple_expression_zegond(self, num_of_item):
         if self.lookahead.term in ['NUM', '(', '+', '-']:
@@ -327,7 +476,14 @@ class Parser:
             self.Additive_expression_zegond(temp)
             self.C(temp + 1)
         else:
-            print('error')
+
+            if self.lookahead.term in [';', ']', ')', ',']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Signed_factor_zegond()
 
     def Simple_expression_prime(self, num_of_item):
         if self.lookahead.term in [';', ']', ')', ',', '<', '==', '*', '-', '+', '(']:
@@ -337,7 +493,10 @@ class Parser:
             self.Additive_expression_prime(temp)
             self.C(temp + 1)
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Signed_factor_prime()
 
     def C(self, num_of_item):
         if self.lookahead.term in ['<', '==']:
@@ -350,7 +509,10 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.C()
 
     def Relop(self, num_of_item):
         if self.lookahead.term in ['<']:
@@ -358,7 +520,14 @@ class Parser:
         elif self.lookahead.term in ['==']:
             self.Match('==', num_of_item)
         else:
-            print('error')
+            if self.lookahead.term in ['ID', ';', 'NUM', '(',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Relop()
 
     def Additive_expression(self, num_of_item):
         if self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
@@ -368,7 +537,13 @@ class Parser:
             self.Term(temp)
             self.D(temp + 1)
         else:
-            print('error')
+            if self.lookahead.term in [';', ']', ')', ',']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Additive_expression()
 
     def Additive_expression_prime(self, num_of_item):
         if self.lookahead.term in ['(', '*', ';', ']', ')', ',', '<', '==', '+', '-']:
@@ -379,7 +554,10 @@ class Parser:
             self.D(temp + 1)
 
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Additive_expression_prime()
 
     def Additive_expression_zegond(self, num_of_item):
         if self.lookahead.term in ['NUM', '(', '+', '-']:
@@ -389,7 +567,13 @@ class Parser:
             self.Term_zegond(temp)
             self.D(temp + 1)
         else:
-            print('error')
+            if self.lookahead.term in [';', ']', ')', ',','<','==']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Additive_expression_zegond()
 
     def D(self, num_of_item):
         if self.lookahead.term in ['+', '-']:
@@ -404,7 +588,9 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print('error')
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.D()
 
     def Addop(self, num_of_item):
         if self.lookahead.term in ['+']:
@@ -412,7 +598,14 @@ class Parser:
         elif self.lookahead.term in ['-']:
             self.Match('-', num_of_item)
         else:
-            print('error')
+            if self.lookahead.term in ['ID', ';', 'NUM', '(',
+                                       '+', '-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Addop()
 
     def Term(self, num_of_item):
         if self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
@@ -422,7 +615,13 @@ class Parser:
             self.Signed_factor(temp)
             self.G(temp + 1)
         else:
-            print('error')
+            if self.lookahead.term in [';', ']', ')', ',', '<', '==','+','-']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Term()
 
     def Term_prime(self, num_of_item):
         if self.lookahead.term in ['(', ';', ']', ')', ',', '<', '==', '+', '-', '*']:
@@ -432,7 +631,10 @@ class Parser:
             self.Signed_factor_prime(temp)
             self.G(temp + 1)
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Term_prime(num_of_item)
 
     def Term_zegond(self, num_of_item):
         if self.lookahead.term in ['NUM', '(', '+', '-']:
@@ -442,7 +644,13 @@ class Parser:
             self.Signed_factor_zegond(temp)
             self.G(temp + 1)
         else:
-            print('error')
+            if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-','+']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Term_zegond(num_of_item)
 
     def G(self, num_of_item):
         if self.lookahead.term in ['*']:
@@ -456,7 +664,10 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.G(num_of_item)
 
     def Signed_factor(self, num_of_item):
         if self.lookahead.term in ['+']:
@@ -471,14 +682,23 @@ class Parser:
             tree.append(Node("Factor", parent=tree[num_of_item]))
             self.Factor(len(tree) - 1)
         else:
-            print('error')
+            if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+','*']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Signed_factor(num_of_item)
 
     def Signed_factor_prime(self, num_of_item):
         if self.lookahead.term in ['(', ';', ']', ')', ',', '<', '==', '+', '-', '*']:
             tree.append(Node("Factor-prime", parent=tree[num_of_item]))
             self.Factor_prime(len(tree) - 1)
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Signed_factor_prime(num_of_item)
 
     def Signed_factor_zegond(self, num_of_item):
         if self.lookahead.term in ['+']:
@@ -493,7 +713,13 @@ class Parser:
             tree.append(Node("Factor-zegond", parent=tree[num_of_item]))
             self.Factor_zegond(len(tree) - 1)
         else:
-            print('error')
+            if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Signed_factor_zegond(num_of_item)
 
     def Factor(self, num_of_item):
         if self.lookahead.term in ['(']:
@@ -508,7 +734,13 @@ class Parser:
         elif self.lookahead.term in ['NUM']:
             self.Match('NUM', num_of_item)
         else:
-            print('error')
+            if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Factor(num_of_item)
 
     def Var_call_prime(self, num_of_item):
         if self.lookahead.term in ['(']:
@@ -520,7 +752,10 @@ class Parser:
             tree.append(Node("Var-prime", parent=tree[num_of_item]))
             self.Var_prime(len(tree) - 1)
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Var_call_prime(num_of_item)
 
     def Var_prime(self, num_of_item):
         if self.lookahead.term in ['[']:
@@ -532,7 +767,10 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Var_prime(num_of_item)
 
     def Factor_prime(self, num_of_item):
         if self.lookahead.term in ['(']:
@@ -544,7 +782,10 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Factor_prime(num_of_item)
 
     def Factor_zegond(self, num_of_item):
         if self.lookahead.term in ['(']:
@@ -555,7 +796,13 @@ class Parser:
         elif self.lookahead.term in ['NUM']:
             self.Match('NUM', num_of_item)
         else:
-            print('error')
+            if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Factor_zegond(num_of_item)
 
     def Args(self, num_of_item):
         if self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
@@ -565,7 +812,10 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Args(num_of_item)
 
     def Arg_list(self, num_of_item):
         if self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
@@ -576,7 +826,13 @@ class Parser:
             self.Arg_list_prime(temp + 1)
 
         else:
-            print('error')
+            if self.lookahead.term in [')']:
+                error.append(f"#{scanner.line_no} : syntax error, missing {self.lookahead.term}")
+                return
+            else:
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Arg_list(num_of_item)
 
     def Arg_list_prime(self, num_of_item):
         if self.lookahead.term in [',']:
@@ -590,7 +846,10 @@ class Parser:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
-            print('error')
+
+                error.append(f"#{scanner.line_no} : syntax error, illegal {self.lookahead.term}")
+                self.lookahead = scanner.get_next_token()
+                self.Arg_list_prime(num_of_item)
 
 def print_parse_tree():
     with open("parse_tree.txt", "w+", encoding="utf-8") as f:
@@ -602,3 +861,7 @@ parser = Parser()
 tree.append(Node("Program"))
 parser.Program(0)
 print_parse_tree()
+
+with open("syntax_errors.txt", "w+", encoding="utf-8") as f:
+    for errors in error:
+        f.write(errors+"\n")
