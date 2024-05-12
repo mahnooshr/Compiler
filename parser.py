@@ -15,6 +15,22 @@ first_sets = {
 follow_set ={
     "Program": [";","[","(","int","void"],
 }
+def print_parse_tree():
+    with open("parse_tree.txt", "w+", encoding="utf-8") as f:
+        for pre, fill, node in RenderTree(tree[0]):
+            f.write("%s%s\n" % (pre, node.name))
+
+def print_syntax_error():
+    with open("syntax_errors.txt", "w+", encoding="utf-8") as f:
+        if len(error) > 0:
+            for errors in error:
+                f.write(errors+"\n")
+        else:
+            f.write("There is no syntax error.")
+def EOF():
+    print_parse_tree()
+    print_syntax_error()
+    exit()
 class Parser:
 
     def __init__(self):
@@ -42,6 +58,8 @@ class Parser:
         else:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
+            if self.lookahead.term=='$':
+                EOF()
             self.Program(num_of_item)
 
     def Declaration_list(self, num_of_item):
@@ -60,6 +78,8 @@ class Parser:
         else:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
+            if self.lookahead=='$':
+                EOF()
             self.Declaration_list(num_of_item)
 
     def Declaration(self, num_of_item):
@@ -76,6 +96,8 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead == '$':
+                    EOF()
                 self.Declaration(num_of_item)
 
     def Declaration_initial(self, num_of_item):
@@ -90,6 +112,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead == '$':
+                    error.append(f"#{scanner.line_no+1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Declaration_initial(num_of_item)
 
     def Declaration_prime(self, num_of_item):
@@ -107,6 +132,8 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    EOF()
                 self.Declaration_prime(num_of_item)
     def Var_declaration_prime(self, num_of_item):
         if self.lookahead.term in [';']:
@@ -124,6 +151,8 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    EOF()
                 self.Var_declaration_prime(num_of_item)
 
     def Fun_declaration_prime(self, num_of_item):
@@ -144,6 +173,8 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    EOF()
                 self.Fun_declaration_prime(num_of_item)
 
     def Type_specifier(self, num_of_item):
@@ -158,6 +189,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Type_specifier(num_of_item)
 
     def Params(self, num_of_item):
@@ -178,6 +212,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Params(num_of_item)
 
     def Param_list(self, num_of_item):
@@ -195,6 +232,9 @@ class Parser:
 
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
+            if self.lookahead.term == '$':
+                error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                EOF()
             self.Param_list(num_of_item)
 
     def Param(self, num_of_item):
@@ -211,6 +251,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Param(num_of_item)
 
     def Param_prime(self, num_of_item):
@@ -224,8 +267,10 @@ class Parser:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
             if self.lookahead.term == '$':
-                # error.append(f"#{scanner.line_no + 1} : syntax error, illegal {self.lookahead.term}")
-                return
+                error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                EOF()
+            # error.append(f"#{scanner.line_no + 1} : syntax error, illegal {self.lookahead.term}")
+            return
             self.Param_prime(num_of_item)
 
     def Compound_stmt(self, num_of_item):
@@ -245,6 +290,8 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    EOF()
                 self.Compound_stmt(num_of_item)
 
     def Statement_list(self, num_of_item):
@@ -261,6 +308,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Statement_list(num_of_item)
 
     def Statement(self, num_of_item):
@@ -288,6 +338,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Statement_list(num_of_item)
 
     def Expression_stmt(self, num_of_item):
@@ -309,6 +362,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Expression_stmt(num_of_item)
 
     def Selection_stmt(self, num_of_item):
@@ -333,6 +389,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Selection_stmt(num_of_item)
 
     def Else_stmt(self, num_of_item):
@@ -352,6 +411,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Else_stmt(num_of_item)
 
     def Iteration_stmt(self, num_of_item):
@@ -379,6 +441,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Iteration_stmt(num_of_item)
 
     def Return_stmt(self, num_of_item):
@@ -395,6 +460,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Return_stmt(num_of_item)
 
     def Return_stmt_prime(self, num_of_item):
@@ -413,6 +481,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Return_stmt_prime(num_of_item)
 
     def Expression(self, num_of_item):
@@ -431,6 +502,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Expression(num_of_item)
 
     def B(self, num_of_item):
@@ -454,6 +528,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.B(num_of_item)
 
     def H(self, num_of_item):
@@ -473,6 +550,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.H(num_of_item)
 
     def Simple_expression_zegond(self, num_of_item):
@@ -490,6 +570,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Signed_factor_zegond(num_of_item)
 
     def Simple_expression_prime(self, num_of_item):
@@ -503,6 +586,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Signed_factor_prime(num_of_item)
 
     def C(self, num_of_item):
@@ -519,6 +605,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.C(num_of_item)
 
     def Relop(self, num_of_item):
@@ -534,6 +623,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Relop(num_of_item)
 
     def Additive_expression(self, num_of_item):
@@ -550,6 +642,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Additive_expression(num_of_item)
 
     def Additive_expression_prime(self, num_of_item):
@@ -564,6 +659,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Additive_expression_prime(num_of_item)
 
     def Additive_expression_zegond(self, num_of_item):
@@ -580,6 +678,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Additive_expression_zegond(num_of_item)
 
     def D(self, num_of_item):
@@ -597,6 +698,9 @@ class Parser:
         else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.D(num_of_item)
 
     def Addop(self, num_of_item):
@@ -612,6 +716,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Addop(num_of_item)
 
     def Term(self, num_of_item):
@@ -628,6 +735,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Term(num_of_item)
 
     def Term_prime(self, num_of_item):
@@ -641,6 +751,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Term_prime(num_of_item)
 
     def Term_zegond(self, num_of_item):
@@ -657,6 +770,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Term_zegond(num_of_item)
 
     def G(self, num_of_item):
@@ -674,6 +790,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.G(num_of_item)
 
     def Signed_factor(self, num_of_item):
@@ -695,6 +814,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Signed_factor(num_of_item)
 
     def Signed_factor_prime(self, num_of_item):
@@ -705,6 +827,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Signed_factor_prime(num_of_item)
 
     def Signed_factor_zegond(self, num_of_item):
@@ -726,6 +851,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Signed_factor_zegond(num_of_item)
 
     def Factor(self, num_of_item):
@@ -747,6 +875,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Factor(num_of_item)
 
     def Var_call_prime(self, num_of_item):
@@ -762,6 +893,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Var_call_prime(num_of_item)
 
     def Var_prime(self, num_of_item):
@@ -776,6 +910,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Var_prime(num_of_item)
 
     def Factor_prime(self, num_of_item):
@@ -790,6 +927,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Factor_prime(num_of_item)
 
     def Factor_zegond(self, num_of_item):
@@ -807,6 +947,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Factor_zegond(num_of_item)
 
     def Args(self, num_of_item):
@@ -820,6 +963,9 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Args(num_of_item)
 
     def Arg_list(self, num_of_item):
@@ -837,6 +983,9 @@ class Parser:
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Arg_list(num_of_item)
 
     def Arg_list_prime(self, num_of_item):
@@ -854,23 +1003,16 @@ class Parser:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
+                if self.lookahead.term == '$':
+                    error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    EOF()
                 self.Arg_list_prime(num_of_item)
 
-def print_parse_tree():
-    with open("parse_tree.txt", "w+", encoding="utf-8") as f:
-        for pre, fill, node in RenderTree(tree[0]):
-            f.write("%s%s\n" % (pre, node.name))
 
 
 parser = Parser()
 tree.append(Node("Program"))
 parser.Program(0)
 print_parse_tree()
+print_syntax_error()
 
-
-with open("syntax_errors.txt", "w+", encoding="utf-8") as f:
-    if len(error) > 0:
-        for errors in error:
-            f.write(errors+"\n")
-    else:
-        f.write("There is no syntax error.")
