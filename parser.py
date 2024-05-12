@@ -28,7 +28,10 @@ class Parser:
             tree.append(Node(self.lookahead, parent=tree[num_of_item]))
             self.lookahead = scanner.get_next_token()
         else:
-            return False
+             error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+             self.lookahead = token
+             return
+
 
 
     def Program(self, num_of_item):
@@ -39,7 +42,7 @@ class Parser:
         else:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
-            self.Program(len(tree))
+            self.Program(num_of_item)
 
     def Declaration_list(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
@@ -50,6 +53,7 @@ class Parser:
             self.Declaration_list(temp + 1)
         elif self.lookahead.term in ['ID', ';', 'NUM', '(', ' {', '}', 'break', 'if', 'for', 'return', '+', '-', '$']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
+
             if self.lookahead.value == '$':
                 self.Match('$',0)
             return
@@ -67,7 +71,7 @@ class Parser:
             self.Declaration_prime(temp + 1)
         else:
             if self.lookahead.term in ['ID',';','NUM','(','int','void','{','}','break','if','for','return','+', '-', '$']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                error.append(f"#{scanner.line_no + 1} : syntax error, illegal Declaration")
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -81,7 +85,7 @@ class Parser:
             self.Match('ID', num_of_item)
         else:
             if self.lookahead.term in [';','[','(',')',',']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('int', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -98,7 +102,7 @@ class Parser:
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
                                        '+', '-', '$']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('(', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -115,7 +119,7 @@ class Parser:
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
                                        '+', '-', '$']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match(';', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -135,7 +139,7 @@ class Parser:
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
                                        '+', '-', '$']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('(', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -149,7 +153,7 @@ class Parser:
             self.Match('void', num_of_item)
         else:
             if self.lookahead.term in ['ID']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('int', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -169,7 +173,7 @@ class Parser:
             self.Match('void', num_of_item)
         else:
             if self.lookahead.term in [')']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('int', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -202,7 +206,7 @@ class Parser:
             self.Param_prime(num_of_item)
         else:
             if self.lookahead.term in [')',',']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('void', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -210,7 +214,7 @@ class Parser:
                 self.Param(len(tree) - 1)
 
     def Param_prime(self, num_of_item):
-        if self.lookahead.term in ['[']:
+        if self.lookahead.term  in ['[']:
             self.Match('[', num_of_item)
             self.Match(']', num_of_item)
         elif self.lookahead.term in [')', ',']:
@@ -219,7 +223,7 @@ class Parser:
         else:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
-            self.Param_prime(len(tree) - 1)
+            self.Param_prime(len(tree)-1)
 
     def Compound_stmt(self, num_of_item):
         if self.lookahead.term in ['{']:
@@ -233,7 +237,7 @@ class Parser:
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for','endif','else', 'return',
                                        '+', '-', '$']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('{', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -276,7 +280,7 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -297,7 +301,7 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -321,7 +325,7 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -340,7 +344,7 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -367,7 +371,7 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -383,7 +387,7 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -401,7 +405,7 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -419,7 +423,7 @@ class Parser:
 
         else:
             if self.lookahead.term in [';',']',')',',']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('NUM', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -478,7 +482,7 @@ class Parser:
         else:
 
             if self.lookahead.term in [';', ']', ')', ',']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('NUM', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -506,7 +510,7 @@ class Parser:
             self.Relop(temp)
             self.Additive_expression(temp + 1)
         elif self.lookahead.term in [';', ']', ')', ',']:
-            tree.append(Node("epsilon", parent=tree[num_of_item]))
+            self.Match('<', num_of_item)
             return
         else:
 
@@ -522,7 +526,7 @@ class Parser:
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('<', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -538,7 +542,7 @@ class Parser:
             self.D(temp + 1)
         else:
             if self.lookahead.term in [';', ']', ')', ',']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -568,7 +572,7 @@ class Parser:
             self.D(temp + 1)
         else:
             if self.lookahead.term in [';', ']', ')', ',','<','==']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('NUM', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -585,7 +589,7 @@ class Parser:
             self.Term(temp + 1)
             self.D(temp + 2)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==']:
-            tree.append(Node("epsilon", parent=tree[num_of_item]))
+            self.Match('+', num_of_item)
             return
         else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -600,7 +604,7 @@ class Parser:
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('+', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -616,7 +620,7 @@ class Parser:
             self.G(temp + 1)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==','+','-']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -645,7 +649,7 @@ class Parser:
             self.G(temp + 1)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-','+']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('NUM', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -661,7 +665,7 @@ class Parser:
             self.Signed_factor(temp)
             self.G(temp + 1)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-']:
-            tree.append(Node("epsilon", parent=tree[num_of_item]))
+            self.Match('*', num_of_item)
             return
         else:
 
@@ -683,7 +687,7 @@ class Parser:
             self.Factor(len(tree) - 1)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+','*']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('+', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -714,7 +718,7 @@ class Parser:
             self.Factor_zegond(len(tree) - 1)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('+', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -735,7 +739,7 @@ class Parser:
             self.Match('NUM', num_of_item)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('(', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -764,8 +768,7 @@ class Parser:
             self.Expression(len(tree) - 1)
             self.Match(']', num_of_item)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-', '*']:
-            tree.append(Node("epsilon", parent=tree[num_of_item]))
-            return
+            self.Match('[', num_of_item)
         else:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -779,8 +782,7 @@ class Parser:
             self.Args(len(tree) - 1)
             self.Match(')', num_of_item)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-', '*']:
-            tree.append(Node("epsilon", parent=tree[num_of_item]))
-            return
+            self.Match('(', num_of_item)
         else:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -797,7 +799,7 @@ class Parser:
             self.Match('NUM', num_of_item)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('(', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -827,7 +829,7 @@ class Parser:
 
         else:
             if self.lookahead.term in [')']:
-                error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+                self.Match('ID', num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -863,5 +865,8 @@ parser.Program(0)
 print_parse_tree()
 
 with open("syntax_errors.txt", "w+", encoding="utf-8") as f:
-    for errors in error:
-        f.write(errors+"\n")
+    if len(error) > 0:
+        for errors in error:
+            f.write(errors+"\n")
+    else:
+        f.write("There is no syntax error.")
