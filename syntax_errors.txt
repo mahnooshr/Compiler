@@ -1,0 +1,2 @@
+#6 : syntax error, missing }
+#6 : syntax error, illegal endif
