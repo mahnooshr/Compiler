@@ -29,7 +29,8 @@ class Parser:
             tree.append(Node(self.lookahead, parent=tree[num_of_item]))
             self.lookahead = scanner.get_next_token()
         else:
-             error.append(f"#{scanner.line_no+1} : syntax error, missing {self.lookahead.term}")
+             error.append(f"#{scanner.line_no+1} : syntax error, missing {token}")
+             # self.lookahead=scanner.get_next_token()
              return
 
 
@@ -222,6 +223,9 @@ class Parser:
         else:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
+            if self.lookahead.term == '$':
+                # error.append(f"#{scanner.line_no + 1} : syntax error, illegal {self.lookahead.term}")
+                return
             self.Param_prime(num_of_item)
 
     def Compound_stmt(self, num_of_item):
@@ -862,6 +866,7 @@ parser = Parser()
 tree.append(Node("Program"))
 parser.Program(0)
 print_parse_tree()
+
 
 with open("syntax_errors.txt", "w+", encoding="utf-8") as f:
     if len(error) > 0:
