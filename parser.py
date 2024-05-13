@@ -538,7 +538,7 @@ class Parser:
             self.Match('=', num_of_item)
             tree.append(Node("Expression", parent=tree[num_of_item]))
             self.Expression(len(tree) - 1)
-        elif self.lookahead.term in ['*', ';', ']', ')', ',', '<', '==', '+', '-']:
+        elif self.lookahead.term in ['*', ';', ']', ')', ',', '<', '==','=', '+', '-']:
             tree.append(Node("G", parent=tree[num_of_item]))
             temp = len(tree) - 1
             tree.append(Node("D", parent=tree[num_of_item]))
@@ -546,6 +546,8 @@ class Parser:
             self.G(temp)
             self.D(temp + 1)
             self.C(temp + 2)
+        elif self.lookahead.term in [';',']',')',',']:
+            return
         else:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -599,7 +601,6 @@ class Parser:
             self.Relop(temp)
             self.Additive_expression(temp + 1)
         elif self.lookahead.term in [';', ']', ')', ',']:
-            error.append(f"#{scanner.line_no + 1} : syntax error, missing C")
             return
         else:
 
@@ -693,7 +694,6 @@ class Parser:
             self.Term(temp + 1)
             self.D(temp + 2)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==']:
-            self.Match('+', num_of_item)
             return
         else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -784,7 +784,6 @@ class Parser:
             self.Signed_factor(temp)
             self.G(temp + 1)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-']:
-            self.Match('*', num_of_item)
             return
         else:
 
@@ -905,7 +904,7 @@ class Parser:
             self.Expression(len(tree) - 1)
             self.Match(']', num_of_item)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-', '*']:
-            self.Match('[', num_of_item)
+            return
         else:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -922,7 +921,7 @@ class Parser:
             self.Args(len(tree) - 1)
             self.Match(')', num_of_item)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-', '*']:
-            self.Match('(', num_of_item)
+            return
         else:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
