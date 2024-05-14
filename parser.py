@@ -1,9 +1,14 @@
+# Compiler project phase 2 - Parser
+# Mahdi Mohammadi 400105239
+# Mahnoosh Ramtin 99101592
+
+
 import scanner
 from anytree import RenderTree, Node
 
 tree = []
 
-error=[]
+error = []
 first_sets = {
         "Program": [";","[","(","int","void"],
         "Declaration_list" : [";","[","(","int","void"],
@@ -46,7 +51,6 @@ class Parser:
             self.lookahead = scanner.get_next_token()
         else:
              error.append(f"#{scanner.line_no+1} : syntax error, missing {token}")
-             # self.lookahead=scanner.get_next_token()
              return
 
 
@@ -59,17 +63,18 @@ class Parser:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
             if self.lookahead.term=='$':
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 EOF()
             self.Program(num_of_item)
 
     def Declaration_list(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
             tree.append(Node("Declaration", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Declaration(len(tree)-1)
             tree.append(Node("Declaration-list", parent=tree[num_of_item]))
-            self.Declaration(temp)
-            self.Declaration_list(temp + 1)
-        elif self.lookahead.term in ['ID', ';', 'NUM', '(', ' {', '}', 'break', 'if', 'for', 'return', '+', '-', '$']:
+            self.Declaration_list(len(tree)-1)
+        elif self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'return', '+', '-', '$']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
 
             if self.lookahead.value == '$':
@@ -79,24 +84,29 @@ class Parser:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
             self.lookahead = scanner.get_next_token()
             if self.lookahead=='$':
-                EOF()
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
+                    EOF()
             self.Declaration_list(num_of_item)
 
     def Declaration(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
             tree.append(Node("Declaration-initial", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Declaration_initial(len(tree)-1)
             tree.append(Node("Declaration-prime", parent=tree[num_of_item]))
-            self.Declaration_initial(temp)
-            self.Declaration_prime(temp + 1)
+            self.Declaration_prime(len(tree)-1)
         else:
             if self.lookahead.term in ['ID',';','NUM','(','int','void','{','}','break','if','for','return','+', '-', '$']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Declaration")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead == '$':
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Declaration(num_of_item)
 
@@ -107,13 +117,17 @@ class Parser:
             self.Match('ID', num_of_item)
         else:
             if self.lookahead.term in [';','[','(',')',',']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Declaration_initial")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Declaration-initial")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead == '$':
                     error.append(f"#{scanner.line_no+1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Declaration_initial(num_of_item)
 
@@ -127,12 +141,16 @@ class Parser:
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
                                        '+', '-', '$']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Declaration_prime")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Declaration-prime")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Declaration_prime(num_of_item)
     def Var_declaration_prime(self, num_of_item):
@@ -146,12 +164,16 @@ class Parser:
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
                                        '+', '-', '$']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Var_declaration_prime")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Var-declaration-prime")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Var_declaration_prime(num_of_item)
 
@@ -159,21 +181,23 @@ class Parser:
         if self.lookahead.term in ['(']:
             self.Match('(', num_of_item)
             tree.append(Node("Params", parent=tree[num_of_item]))
-            temp = len(tree) - 1
-            self.Params(temp)
+            self.Params(len(tree)-1)
             self.Match(')', num_of_item)
             tree.append(Node("Compound-stmt", parent=tree[num_of_item]))
-            tmp = len(tree) - 1
-            self.Compound_stmt(tmp)
+            self.Compound_stmt(len(tree)-1)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
                                        '+', '-', '$']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Fun_declaration_prime")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Fun-declaration-prime")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Fun_declaration_prime(num_of_item)
 
@@ -184,13 +208,17 @@ class Parser:
             self.Match('void', num_of_item)
         else:
             if self.lookahead.term in ['ID']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Type_specifier")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Type-specifier")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Type_specifier(num_of_item)
 
@@ -199,21 +227,24 @@ class Parser:
             self.Match('int', num_of_item)
             self.Match('ID', num_of_item)
             tree.append(Node("Param-prime", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Param_prime(len(tree)-1)
             tree.append(Node("Param-list", parent=tree[num_of_item]))
-            self.Param_prime(temp)
-            self.Param_list(temp + 1)
+            self.Param_list(len(tree)-1)
         elif self.lookahead.term in ['void']:
             self.Match('void', num_of_item)
         else:
             if self.lookahead.term in [')']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Params")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Params(num_of_item)
 
@@ -221,10 +252,9 @@ class Parser:
         if self.lookahead.term in [',']:
             self.Match(',', num_of_item)
             tree.append(Node("Param", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Param(len(tree)-1)
             tree.append(Node("Param-list", parent=tree[num_of_item]))
-            self.Param(temp)
-            self.Param_list(temp + 1)
+            self.Param_list(len(tree)-1)
         elif self.lookahead.term in [')']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
@@ -234,25 +264,30 @@ class Parser:
             self.lookahead = scanner.get_next_token()
             if self.lookahead.term == '$':
                 error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 EOF()
             self.Param_list(num_of_item)
 
     def Param(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
             tree.append(Node("Declaration-initial", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Declaration_initial(len(tree)-1)
             tree.append(Node("Param-prime", parent=tree[num_of_item]))
-            self.Declaration_initial(num_of_item)
-            self.Param_prime(num_of_item)
+            self.Param_prime(len(tree)-1)
         else:
             if self.lookahead.term in [')',',']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Param")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Param(num_of_item)
 
@@ -268,39 +303,41 @@ class Parser:
             self.lookahead = scanner.get_next_token()
             if self.lookahead.term == '$':
                 error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 EOF()
-            # error.append(f"#{scanner.line_no + 1} : syntax error, illegal {self.lookahead.term}")
-            return
             self.Param_prime(num_of_item)
 
     def Compound_stmt(self, num_of_item):
         if self.lookahead.term in ['{']:
             self.Match('{', num_of_item)
             tree.append(Node("Declaration-list", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Declaration_list(len(tree)-1)
             tree.append(Node("Statement-list", parent=tree[num_of_item]))
-            self.Declaration_list(temp)
-            self.Statement_list(temp + 1)
+            self.Statement_list(len(tree)-1)
             self.Match('}', num_of_item)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for','endif','else', 'return',
                                        '+', '-', '$']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Compound_stmt")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Compound-stmt")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Compound_stmt(num_of_item)
 
     def Statement_list(self, num_of_item):
-        if self.lookahead.term in ['ID', ',', '(', '{', 'break', 'if', 'for', 'return', '+', '-']:
+        if self.lookahead.term in ['ID', ',', '(', '{', 'break', 'if', 'for', 'return', '+', '-','NUM',';', '>']:
             tree.append(Node("Statement", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Statement(len(tree)-1)
             tree.append(Node("Statement-list", parent=tree[num_of_item]))
-            self.Statement(temp)
-            self.Statement_list(temp + 1)
+            self.Statement_list(len(tree)-1)
         elif self.lookahead.term in ['}']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
@@ -310,6 +347,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Statement_list(num_of_item)
 
@@ -334,12 +373,16 @@ class Parser:
                                        'else', 'return',
                                        '+', '-']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Statement")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Statement_list(num_of_item)
 
@@ -357,13 +400,17 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Expression_stmt")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Expression-stmt")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Expression_stmt(num_of_item)
 
@@ -372,25 +419,27 @@ class Parser:
             self.Match('if', num_of_item)
             self.Match('(', num_of_item)
             tree.append(Node("Expression", parent=tree[num_of_item]))
-            temp = len(tree) - 1
-            self.Expression(temp)
+            self.Expression(len(tree)-1)
             self.Match(')', num_of_item)
             tree.append(Node("Statement", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Statement(len(tree)-1)
             tree.append(Node("Else-stmt", parent=tree[num_of_item]))
-            self.Statement(temp)
-            self.Else_stmt(temp+1)
+            self.Else_stmt(len(tree)-1)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Selection_stmt")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Selection-stmt")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Selection_stmt(num_of_item)
 
@@ -406,13 +455,17 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Else_stmt")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Else-stmt")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Else_stmt(num_of_item)
 
@@ -421,28 +474,31 @@ class Parser:
             self.Match('for', num_of_item)
             self.Match('(', num_of_item)
             tree.append(Node("Expression", parent=tree[num_of_item]))
-            temp = len(tree) - 1
-            tree.append(Node("Expression", parent=tree[num_of_item]))
-            tree.append(Node("Expression", parent=tree[num_of_item]))
-            tree.append(Node("Statement", parent=tree[num_of_item]))
-            self.Expression(temp)
+            self.Expression(len(tree)-1)
             self.Match(';', num_of_item)
-            self.Expression(temp + 1)
+            tree.append(Node("Expression", parent=tree[num_of_item]))
+            self.Expression(len(tree)-1)
             self.Match(';', num_of_item)
-            self.Expression(temp + 2)
+            tree.append(Node("Expression", parent=tree[num_of_item]))
+            self.Expression(len(tree)-1)
             self.Match(')', num_of_item)
-            self.Statement(temp + 3)
+            tree.append(Node("Statement", parent=tree[num_of_item]))
+            self.Statement(len(tree)-1)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
                                        '+', '-']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Iteration_stmt")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Iteration_stmt(num_of_item)
 
@@ -456,12 +512,16 @@ class Parser:
                                        'else', 'return',
                                        '+', '-']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Return_stmt")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Return_stmt(num_of_item)
 
@@ -477,12 +537,16 @@ class Parser:
                                        'else', 'return',
                                        '+', '-']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Return_stmt_prime")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Return_stmt_prime(num_of_item)
 
@@ -498,12 +562,16 @@ class Parser:
         else:
             if self.lookahead.term in [';',']',')',',']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Expression")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Expression(num_of_item)
 
@@ -530,6 +598,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.B(num_of_item)
 
@@ -540,13 +610,13 @@ class Parser:
             self.Expression(len(tree) - 1)
         elif self.lookahead.term in ['*', ';', ']', ')', ',', '<', '==','=', '+', '-']:
             tree.append(Node("G", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.G(len(tree)-1)
             tree.append(Node("D", parent=tree[num_of_item]))
+            self.D(len(tree)-1)
             tree.append(Node("C", parent=tree[num_of_item]))
-            self.G(temp)
-            self.D(temp + 1)
-            self.C(temp + 2)
+            self.C(len(tree)-1)
         elif self.lookahead.term in [';',']',')',',']:
+            tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
 
@@ -554,53 +624,59 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.H(num_of_item)
 
     def Simple_expression_zegond(self, num_of_item):
         if self.lookahead.term in ['NUM', '(', '+', '-']:
             tree.append(Node("Additive-expression-zegond", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Additive_expression_zegond(len(tree)-1)
             tree.append(Node("C", parent=tree[num_of_item]))
-            self.Additive_expression_zegond(temp)
-            self.C(temp + 1)
+            self.C(len(tree)-1)
         else:
 
             if self.lookahead.term in [';', ']', ')', ',']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Simple_expression_zegond")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Simple-expression-zegond")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Signed_factor_zegond(num_of_item)
 
     def Simple_expression_prime(self, num_of_item):
         if self.lookahead.term in [';', ']', ')', ',', '<', '==', '*', '-', '+', '(']:
             tree.append(Node("Additive-expression-prime", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Additive_expression_prime(len(tree)-1)
             tree.append(Node("C", parent=tree[num_of_item]))
-            self.Additive_expression_prime(temp)
-            self.C(temp + 1)
+            self.C(len(tree)-1)
         else:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Signed_factor_prime(num_of_item)
 
     def C(self, num_of_item):
         if self.lookahead.term in ['<', '==']:
             tree.append(Node("Relop", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Relop(len(tree)-1)
             tree.append(Node("Additive-expression", parent=tree[num_of_item]))
-            self.Relop(temp)
-            self.Additive_expression(temp + 1)
+            self.Additive_expression(len(tree)-1)
         elif self.lookahead.term in [';', ']', ')', ',']:
+            tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
 
@@ -608,6 +684,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.C(num_of_item)
 
@@ -620,41 +698,47 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(',
                                        '+', '-']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Relop")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Relop(num_of_item)
 
     def Additive_expression(self, num_of_item):
         if self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
             tree.append(Node("Term", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Term(len(tree)-1)
             tree.append(Node("D", parent=tree[num_of_item]))
-            self.Term(temp)
-            self.D(temp + 1)
+            self.D(len(tree)-1)
         else:
             if self.lookahead.term in [';', ']', ')', ',']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Additive_expression")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Additive-expression")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Additive_expression(num_of_item)
 
     def Additive_expression_prime(self, num_of_item):
         if self.lookahead.term in ['(', '*', ';', ']', ')', ',', '<', '==', '+', '-']:
             tree.append(Node("Term-prime", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Term_prime(len(tree)-1)
             tree.append(Node("D", parent=tree[num_of_item]))
-            self.Term_prime(temp)
-            self.D(temp + 1)
+            self.D(len(tree)-1)
 
         else:
 
@@ -662,44 +746,51 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Additive_expression_prime(num_of_item)
 
     def Additive_expression_zegond(self, num_of_item):
         if self.lookahead.term in ['NUM', '(', '+', '-']:
             tree.append(Node("Term-zegond", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Term_zegond(len(tree)-1)
             tree.append(Node("D", parent=tree[num_of_item]))
-            self.Term_zegond(temp)
-            self.D(temp + 1)
+            self.D(len(tree)-1)
         else:
             if self.lookahead.term in [';', ']', ')', ',','<','==']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Additive_expression_zegond")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Additive-expression-zegond")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Additive_expression_zegond(num_of_item)
 
     def D(self, num_of_item):
         if self.lookahead.term in ['+', '-']:
             tree.append(Node("Addop", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Addop(len(tree)-1)
             tree.append(Node("Term", parent=tree[num_of_item]))
+            self.Term(len(tree)-1)
             tree.append(Node("D", parent=tree[num_of_item]))
-            self.Addop(temp)
-            self.Term(temp + 1)
-            self.D(temp + 2)
+            self.D(len(tree)-1)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==']:
+            tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.D(num_of_item)
 
@@ -712,66 +803,77 @@ class Parser:
             if self.lookahead.term in ['ID', ';', 'NUM', '(',
                                        '+', '-']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Addop")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Addop(num_of_item)
 
     def Term(self, num_of_item):
         if self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
             tree.append(Node("Signed-factor", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Signed_factor(len(tree)-1)
             tree.append(Node("G", parent=tree[num_of_item]))
-            self.Signed_factor(temp)
-            self.G(temp + 1)
+            self.G(len(tree)-1)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==','+','-']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Term")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Term(num_of_item)
 
     def Term_prime(self, num_of_item):
         if self.lookahead.term in ['(', ';', ']', ')', ',', '<', '==', '+', '-', '*']:
             tree.append(Node("Signed-factor-prime", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Signed_factor_prime(len(tree)-1)
             tree.append(Node("G", parent=tree[num_of_item]))
-            self.Signed_factor_prime(temp)
-            self.G(temp + 1)
+            self.G(len(tree)-1)
         else:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Term_prime(num_of_item)
 
     def Term_zegond(self, num_of_item):
         if self.lookahead.term in ['NUM', '(', '+', '-']:
             tree.append(Node("Signed-factor-zegond", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Signed_factor_zegond(len(tree)-1)
             tree.append(Node("G", parent=tree[num_of_item]))
-            self.Signed_factor_zegond(temp)
-            self.G(temp + 1)
+            self.G(len(tree)-1)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-','+']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Term_zegond")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Term-zegond")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Term_zegond(num_of_item)
 
@@ -779,11 +881,11 @@ class Parser:
         if self.lookahead.term in ['*']:
             self.Match('*', num_of_item)
             tree.append(Node("Signed-factor", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Signed_factor(len(tree)-1)
             tree.append(Node("G", parent=tree[num_of_item]))
-            self.Signed_factor(temp)
-            self.G(temp + 1)
+            self.G(len(tree)-1)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-']:
+            tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
 
@@ -791,6 +893,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.G(num_of_item)
 
@@ -808,13 +912,19 @@ class Parser:
             self.Factor(len(tree) - 1)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+','*']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Signed_factor")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Signed-factor")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Signed_factor(num_of_item)
 
@@ -828,6 +938,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Signed_factor_prime(num_of_item)
 
@@ -845,13 +957,17 @@ class Parser:
             self.Factor_zegond(len(tree) - 1)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Signed_factor_zegond")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Signed-factor-zegond")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Signed_factor_zegond(num_of_item)
 
@@ -870,12 +986,16 @@ class Parser:
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Factor")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Factor(num_of_item)
 
@@ -894,6 +1014,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Var_call_prime(num_of_item)
 
@@ -904,6 +1026,7 @@ class Parser:
             self.Expression(len(tree) - 1)
             self.Match(']', num_of_item)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-', '*']:
+            tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
 
@@ -911,6 +1034,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Var_prime(num_of_item)
 
@@ -921,6 +1046,7 @@ class Parser:
             self.Args(len(tree) - 1)
             self.Match(')', num_of_item)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-', '*']:
+            tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
         else:
 
@@ -928,6 +1054,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Factor_prime(num_of_item)
 
@@ -941,13 +1069,17 @@ class Parser:
             self.Match('NUM', num_of_item)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Factor_zegond")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Factor-zegond")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Factor_zegond(num_of_item)
 
@@ -964,26 +1096,31 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Args(num_of_item)
 
     def Arg_list(self, num_of_item):
         if self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
             tree.append(Node("Expression", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Expression(len(tree)-1)
             tree.append(Node("Arg-list-prime", parent=tree[num_of_item]))
-            self.Expression(temp)
-            self.Arg_list_prime(temp + 1)
+            self.Arg_list_prime(len(tree)-1)
 
         else:
             if self.lookahead.term in [')']:
-                error.append(f"#{scanner.line_no + 1} : syntax error, missing Arg_list")
+                error.append(f"#{scanner.line_no + 1} : syntax error, missing Arg-list")
+                tree[num_of_item].parent = None
+                tree.pop(num_of_item)
                 return
             else:
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Arg_list(num_of_item)
 
@@ -991,10 +1128,9 @@ class Parser:
         if self.lookahead.term in [',']:
             self.Match(',', num_of_item)
             tree.append(Node("Expression", parent=tree[num_of_item]))
-            temp = len(tree) - 1
+            self.Expression(len(tree)-1)
             tree.append(Node("Arg-list-prime", parent=tree[num_of_item]))
-            self.Expression(temp)
-            self.Arg_list_prime(temp + 1)
+            self.Arg_list_prime(len(tree)-1)
         elif self.lookahead.term in [')']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
@@ -1004,6 +1140,8 @@ class Parser:
                 self.lookahead = scanner.get_next_token()
                 if self.lookahead.term == '$':
                     error.append(f"#{scanner.line_no + 1} : syntax error, Unexpected EOF")
+                    tree[num_of_item].parent = None
+                    tree.pop(num_of_item)
                     EOF()
                 self.Arg_list_prime(num_of_item)
 
@@ -1012,6 +1150,8 @@ class Parser:
 parser = Parser()
 tree.append(Node("Program"))
 parser.Program(0)
+if(len(tree[0].children) != 2):
+    tree.append(Node('$', parent=tree[0]))
 print_parse_tree()
 print_syntax_error()
 

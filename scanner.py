@@ -1,4 +1,4 @@
-# Compiler project phase 1
+# Compiler project phase 2 - Scanner
 # Mahdi Mohammadi 400105239
 # Mahnoosh Ramtin 99101592
 
@@ -196,9 +196,7 @@ def get_next_token():
                 pointer_location += 1
 
             else:
-                stri = str(line_obj.line[line_obj.pointer_loc])
-                errors.append(f"({stri}, {'Invalid input'})")
-                line_obj.pointer_loc += 1
+                pointer_location += 1
         else:
             line_no = line_no + 1
             pointer_location = 0
