@@ -13,13 +13,32 @@ first_sets = {
         "Program": [";","[","(","int","void"],
         "Declaration_list" : [";","[","(","int","void"],
         "Declaration" : [";","[","(","int","void"],
-         "Declaration_initial": ["int","void"]
-
+         "Declaration_initial": ["int","void"],
+         "Declaration_prime":[';','[','('],
+         "Var_Declaration_prime":[';','['],
+         "Fun_Declaration_prime":['('],
+         "Type_specifier":["int","void"],
+         "Params":["int","void"],
+         "Param_list":[","],
+          "Param":["int","void"],
+          "Param_prime":["["],
+          "Compound_stmt":["{"],
+          "Statement_list":["ID",";","NUM","(","{","break","if","for","return","+","-"],
+          "Statement":["ID",";","NUM","(","{","break","if","for","return","+","-"],
+          "Expression_stmt": ["ID",";","NUM","(","break","+","-"],
+          "Selection_stmt":["if"],
+          "Else-stmt":["endif","else"],
+          "Iteration-stmt":["for"],
+          "Return-stmt":["return"],
+          "Return-stmt-prime":["ID",";","NUM","(","+","-"],
+          "Expression":["ID","NUM","(","+","-"],
+          "B":["[","(","=","<","==","+","-","*"],
+          "H":["=","<","==","+","-","*"],
+          "Simple_expression_zegond":["NUM","(","+","-"],
+          "Simple_expression_prime":["(","<","==","+","-","*"],
+          "C":["<","=="]
     }
 
-follow_set ={
-    "Program": [";","[","(","int","void"],
-}
 def print_parse_tree():
     with open("parse_tree.txt", "w+", encoding="utf-8") as f:
         for pre, fill, node in RenderTree(tree[0]):
@@ -333,7 +352,7 @@ class Parser:
                 self.Compound_stmt(num_of_item)
 
     def Statement_list(self, num_of_item):
-        if self.lookahead.term in ['ID', ',', '(', '{', 'break', 'if', 'for', 'return', '+', '-','NUM',';', '>']:
+        if self.lookahead.term in ['ID', ',', '(', '{', 'break', 'if', 'for', 'return', '+', '-','NUM',';']:
             tree.append(Node("Statement", parent=tree[num_of_item]))
             self.Statement(len(tree)-1)
             tree.append(Node("Statement-list", parent=tree[num_of_item]))
@@ -615,9 +634,6 @@ class Parser:
             self.D(len(tree)-1)
             tree.append(Node("C", parent=tree[num_of_item]))
             self.C(len(tree)-1)
-        elif self.lookahead.term in [';',']',')',',']:
-            tree.append(Node("epsilon", parent=tree[num_of_item]))
-            return
         else:
 
                 error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -695,7 +711,7 @@ class Parser:
         elif self.lookahead.term in ['==']:
             self.Match('==', num_of_item)
         else:
-            if self.lookahead.term in ['ID', ';', 'NUM', '(',
+            if self.lookahead.term in ['ID', 'NUM', '(',
                                        '+', '-']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Relop")
                 tree[num_of_item].parent = None
@@ -758,7 +774,7 @@ class Parser:
             tree.append(Node("D", parent=tree[num_of_item]))
             self.D(len(tree)-1)
         else:
-            if self.lookahead.term in [';', ']', ')', ',','<','==']:
+            if self.lookahead.term in [';', ']', ')', ',','<','==',"+","-","*"]:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Additive-expression-zegond")
                 tree[num_of_item].parent = None
                 tree.pop(num_of_item)
