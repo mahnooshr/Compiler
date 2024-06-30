@@ -4,7 +4,9 @@
 
 
 import scanner
+import cod_gen
 from anytree import RenderTree, Node
+
 
 tree = []
 
@@ -39,6 +41,7 @@ first_sets = {
           "C":["<","=="]
     }
 
+
 def print_parse_tree():
     with open("parse_tree.txt", "w+", encoding="utf-8") as f:
         for pre, fill, node in RenderTree(tree[0]):
@@ -55,16 +58,25 @@ def EOF():
     print_parse_tree()
     print_syntax_error()
     exit()
+
+
 class Parser:
 
     def __init__(self):
 
         self.lookahead = scanner.get_next_token()
+        self.code_gen = cod_gen.CodeGen(cod_gen.SymbolTable())
+
+    def print_code_generator(self):
+        with open("output.txt", "w") as f:
+            for inst in self.code_gen.pb:
+                f.write(f"{inst}\t{self.code_gen.pb[inst]}\n")
 
     def Match(self, token, num_of_item):
         if self.lookahead.term == token:
             if self.lookahead.value == '$':
                 tree.append(Node('$', parent= tree[0]))
+                self.print_code_generator()
                 return
             tree.append(Node(self.lookahead, parent=tree[num_of_item]))
             self.lookahead = scanner.get_next_token()
@@ -110,6 +122,7 @@ class Parser:
 
     def Declaration(self, num_of_item):
         if self.lookahead.term in ['int', 'void']:
+            self.code_gen.get_var_type(self.lookahead.term, scanner.line_no)
             tree.append(Node("Declaration-initial", parent=tree[num_of_item]))
             self.Declaration_initial(len(tree)-1)
             tree.append(Node("Declaration-prime", parent=tree[num_of_item]))
@@ -133,7 +146,9 @@ class Parser:
         if self.lookahead.term in ['int', 'void']:
             tree.append(Node("Type-specifier", parent=tree[num_of_item]))
             self.Type_specifier(len(tree) - 1)
+            self.code_gen.push_id(self.lookahead.term, scanner.line_no)
             self.Match('ID', num_of_item)
+            self.code_gen.increase_param_cnt(self.lookahead.term, scanner.line_no)
         else:
             if self.lookahead.term in [';','[','(',')',',']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Declaration-initial")
@@ -175,11 +190,14 @@ class Parser:
     def Var_declaration_prime(self, num_of_item):
         if self.lookahead.term in [';']:
             self.Match(';', num_of_item)
+            self.code_gen.define_var(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in ['[']:
             self.Match('[', num_of_item)
+            self.code_gen.push_num(self.lookahead.term, scanner.line_no)
             self.Match('NUM', num_of_item)
             self.Match(']', num_of_item)
             self.Match(';', num_of_item)
+            self.code_gen.define_arr(self.lookahead.term, scanner.line_no)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
                                        '+', '-', '$']:
@@ -198,11 +216,17 @@ class Parser:
 
     def Fun_declaration_prime(self, num_of_item):
         if self.lookahead.term in ['(']:
+            self.code_gen.before_func_params(self.lookahead.term, scanner.line_no)
             self.Match('(', num_of_item)
             tree.append(Node("Params", parent=tree[num_of_item]))
             self.Params(len(tree)-1)
+            self.code_gen.define_param_vars(self.lookahead.term, scanner.line_no)
             self.Match(')', num_of_item)
+            self.code_gen.create_function(self.lookahead.term, scanner.line_no)
+            self.code_gen.make_return(self.lookahead.term, scanner.line_no)
             tree.append(Node("Compound-stmt", parent=tree[num_of_item]))
+            self.code_gen.end_return(self.lookahead.term, scanner.line_no)
+            self.code_gen.return_function(self.lookahead.term, scanner.line_no)
             self.Compound_stmt(len(tree)-1)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for', 'return',
@@ -244,13 +268,16 @@ class Parser:
     def Params(self, num_of_item):
         if self.lookahead.term in ['int']:
             self.Match('int', num_of_item)
+            self.code_gen.push_id(self.lookahead.term, scanner.line_no)
             self.Match('ID', num_of_item)
+            self.code_gen.increase_param_cnt(self.lookahead.term, scanner.line_no)
             tree.append(Node("Param-prime", parent=tree[num_of_item]))
             self.Param_prime(len(tree)-1)
             tree.append(Node("Param-list", parent=tree[num_of_item]))
             self.Param_list(len(tree)-1)
         elif self.lookahead.term in ['void']:
             self.Match('void', num_of_item)
+            self.code_gen.param_type_void(self.lookahead.term, scanner.line_no)
         else:
             if self.lookahead.term in [')']:
                 error.append(f"#{scanner.line_no + 1} : syntax error, missing Params")
@@ -314,8 +341,10 @@ class Parser:
         if self.lookahead.term  in ['[']:
             self.Match('[', num_of_item)
             self.Match(']', num_of_item)
+            self.code_gen.param_type_arr(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in [')', ',']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
+            self.code_gen.param_type_int(self.lookahead.term, scanner.line_no)
             return
         else:
             error.append(f"#{scanner.line_no+1} : syntax error, illegal {self.lookahead.term}")
@@ -329,12 +358,14 @@ class Parser:
 
     def Compound_stmt(self, num_of_item):
         if self.lookahead.term in ['{']:
+            self.code_gen.push_scope(self.lookahead.term, scanner.line_no)
             self.Match('{', num_of_item)
             tree.append(Node("Declaration-list", parent=tree[num_of_item]))
             self.Declaration_list(len(tree)-1)
             tree.append(Node("Statement-list", parent=tree[num_of_item]))
             self.Statement_list(len(tree)-1)
             self.Match('}', num_of_item)
+            self.code_gen.pop_scope(self.lookahead.term, scanner.line_no)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'for','endif','else', 'return',
                                        '+', '-', '$']:
@@ -410,9 +441,11 @@ class Parser:
             tree.append(Node("Expression", parent=tree[num_of_item]))
             self.Expression(len(tree) - 1)
             self.Match(';', num_of_item)
+            self.code_gen.ss_pop(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in ['break']:
             self.Match('break', num_of_item)
             self.Match(';', num_of_item)
+            self.code_gen.break_loop(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in [';']:
             self.Match(';', num_of_item)
         else:
@@ -440,6 +473,7 @@ class Parser:
             tree.append(Node("Expression", parent=tree[num_of_item]))
             self.Expression(len(tree)-1)
             self.Match(')', num_of_item)
+            self.code_gen.save(self.lookahead.term, scanner.line_no)
             tree.append(Node("Statement", parent=tree[num_of_item]))
             self.Statement(len(tree)-1)
             tree.append(Node("Else-stmt", parent=tree[num_of_item]))
@@ -465,11 +499,14 @@ class Parser:
     def Else_stmt(self, num_of_item):
         if self.lookahead.term in ['endif']:
             self.Match('endif', num_of_item)
+            self.code_gen.jpf(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in ['else']:
             self.Match('else', num_of_item)
+            self.code_gen.jpf_save(self.lookahead.term, scanner.line_no)
             tree.append(Node("Statement", parent=tree[num_of_item]))
             self.Statement(len(tree) - 1)
             self.Match('endif', num_of_item)
+            self.code_gen.jump(self.lookahead.term, scanner.line_no)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
@@ -526,6 +563,7 @@ class Parser:
             self.Match('return', num_of_item)
             tree.append(Node("Return-stmt-prime", parent=tree[num_of_item]))
             self.Return_stmt_prime(len(tree) - 1)
+            self.code_gen.save_return_value(self.lookahead.term, scanner.line_no)
         else:
             if self.lookahead.term in ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'for', 'endif',
                                        'else', 'return',
@@ -546,6 +584,7 @@ class Parser:
 
     def Return_stmt_prime(self, num_of_item):
         if self.lookahead.term in [';']:
+            self.code_gen.push_current_inst(self.lookahead.term, scanner.line_no)
             self.Match(';', num_of_item)
         elif self.lookahead.term in ['ID', 'NUM', '(', '+', '-']:
             tree.append(Node("Expression", parent=tree[num_of_item]))
@@ -574,6 +613,7 @@ class Parser:
             tree.append(Node("Simple-expression-zegond", parent=tree[num_of_item]))
             self.Simple_expression_zegond(len(tree) - 1)
         elif self.lookahead.term in ['ID']:
+            self.code_gen.push_local_id_addr(self.lookahead.term, scanner.line_no)
             self.Match('ID', num_of_item)
             tree.append(Node("B", parent=tree[num_of_item]))
             self.B(len(tree) -1)
@@ -599,12 +639,14 @@ class Parser:
             self.Match('=', num_of_item)
             tree.append(Node("Expression", parent=tree[num_of_item]))
             self.Expression(len(tree) - 1)
+            self.code_gen.assign(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in ['[']:
             self.Match('[', num_of_item)
             tree.append(Node("Expression", parent=tree[num_of_item]))
             temp = len(tree) - 1
             self.Expression(temp)
             self.Match(']', num_of_item)
+            self.code_gen.arr_index(self.lookahead.term, scanner.line_no)
             tree.append(Node("H", parent=tree[num_of_item]))
             temp = len(tree) - 1
             self.H(temp)
@@ -626,6 +668,7 @@ class Parser:
         if self.lookahead.term in ['=']:
             self.Match('=', num_of_item)
             tree.append(Node("Expression", parent=tree[num_of_item]))
+            self.code_gen.assign(self.lookahead.term, scanner.line_no)
             self.Expression(len(tree) - 1)
         elif self.lookahead.term in ['*', ';', ']', ')', ',', '<', '==','=', '+', '-']:
             tree.append(Node("G", parent=tree[num_of_item]))
@@ -687,10 +730,12 @@ class Parser:
 
     def C(self, num_of_item):
         if self.lookahead.term in ['<', '==']:
+            self.code_gen.push_op(self.lookahead.term, scanner.line_no)
             tree.append(Node("Relop", parent=tree[num_of_item]))
             self.Relop(len(tree)-1)
             tree.append(Node("Additive-expression", parent=tree[num_of_item]))
             self.Additive_expression(len(tree)-1)
+            self.code_gen.op_action(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in [';', ']', ')', ',']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
@@ -791,10 +836,12 @@ class Parser:
 
     def D(self, num_of_item):
         if self.lookahead.term in ['+', '-']:
+            self.code_gen.push_op(self.lookahead.term, scanner.line_no)
             tree.append(Node("Addop", parent=tree[num_of_item]))
             self.Addop(len(tree)-1)
             tree.append(Node("Term", parent=tree[num_of_item]))
             self.Term(len(tree)-1)
+            self.code_gen.op_action(self.lookahead.term, scanner.line_no)
             tree.append(Node("D", parent=tree[num_of_item]))
             self.D(len(tree)-1)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==']:
@@ -898,6 +945,7 @@ class Parser:
             self.Match('*', num_of_item)
             tree.append(Node("Signed-factor", parent=tree[num_of_item]))
             self.Signed_factor(len(tree)-1)
+            self.code_gen.mult(self.lookahead.term, scanner.line_no)
             tree.append(Node("G", parent=tree[num_of_item]))
             self.G(len(tree)-1)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-']:
@@ -923,6 +971,7 @@ class Parser:
             self.Match('-', num_of_item)
             tree.append(Node("Factor", parent=tree[num_of_item]))
             self.Factor(len(tree) - 1)
+            self.code_gen.negate(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in ['ID', 'NUM', '(']:
             tree.append(Node("Factor", parent=tree[num_of_item]))
             self.Factor(len(tree) - 1)
@@ -968,6 +1017,7 @@ class Parser:
             self.Match('-', num_of_item)
             tree.append(Node("Factor", parent=tree[num_of_item]))
             self.Factor(len(tree) - 1)
+            self.code_gen.negate(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in ['NUM', '(']:
             tree.append(Node("Factor-zegond", parent=tree[num_of_item]))
             self.Factor_zegond(len(tree) - 1)
@@ -994,10 +1044,12 @@ class Parser:
             self.Expression(len(tree) - 1)
             self.Match(')', num_of_item)
         elif self.lookahead.term in ['ID']:
+            self.code_gen.push_local_id_addr(self.lookahead.term, scanner.line_no)
             self.Match('ID', num_of_item)
             tree.append(Node("Var-call-prime", parent=tree[num_of_item]))
             self.Var_call_prime(len(tree) - 1)
         elif self.lookahead.term in ['NUM']:
+            self.code_gen.push_num(self.lookahead.term, scanner.line_no)
             self.Match('NUM', num_of_item)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
@@ -1020,7 +1072,9 @@ class Parser:
             self.Match('(', num_of_item)
             tree.append(Node("Args", parent=tree[num_of_item]))
             self.Args(len(tree) - 1)
+            self.code_gen.output(self.lookahead.term, scanner.line_no)
             self.Match(')', num_of_item)
+            self.code_gen.function_call(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in ['[', ';', ']', ')', ',', '<', '==', '+', '-', '*']:
             tree.append(Node("Var-prime", parent=tree[num_of_item]))
             self.Var_prime(len(tree) - 1)
@@ -1041,6 +1095,7 @@ class Parser:
             tree.append(Node("Expression", parent=tree[num_of_item]))
             self.Expression(len(tree) - 1)
             self.Match(']', num_of_item)
+            self.code_gen.arr_index(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-', '*']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
@@ -1060,7 +1115,9 @@ class Parser:
             self.Match('(', num_of_item)
             tree.append(Node("Args", parent=tree[num_of_item]))
             self.Args(len(tree) - 1)
+            self.code_gen.output(self.lookahead.term, scanner.line_no)
             self.Match(')', num_of_item)
+            self.code_gen.function_call(self.lookahead.term, scanner.line_no)
         elif self.lookahead.term in [';', ']', ')', ',', '<', '==', '+', '-', '*']:
             tree.append(Node("epsilon", parent=tree[num_of_item]))
             return
@@ -1082,6 +1139,7 @@ class Parser:
             self.Expression(len(tree) - 1)
             self.Match(')', num_of_item)
         elif self.lookahead.term in ['NUM']:
+            self.code_gen.push_num(self.lookahead.term, scanner.line_no)
             self.Match('NUM', num_of_item)
         else:
             if self.lookahead.term in [';', ']', ')', ',', '<', '==', '-', '+', '*']:
